@@ -8,32 +8,34 @@ Authors@R:
              email = "nguyenllpsych@gmail.com",
              comment = c(ORCID = "0000-0002-1575-0395")),
       person(given = "Steven",
-             family  = "Nydick",
-             email   = "swnydick@gmail.com",
-             role    = c("aut"),
+             family = "Nydick",
+             role = c("aut"),
+             email = "swnydick@gmail.com",
              comment = c(ORCID = "0000-0002-2908-1188")))
-Description: Probability functions to describe the Thurstonian FC-IRT model, 
-  simulate responses to the Thurstonian FC-IRT model, and estimate parameters 
-  of the Thurstonian FC-IRT model.
+Description: Probability functions to describe the Thurstonian FC-IRT
+    model, simulate responses to the Thurstonian FC-IRT model, and
+    estimate parameters of the Thurstonian FC-IRT model.
 License: GPL (>= 3)
-URL: https://github.com/nguyenllpsych/thirt
+URL: https://nguyenllpsych.github.io/thirt,
+     https://github.com/nguyenllpsych/thirt
 Depends: 
     R (>= 4.0.0)
 Imports: 
     lifecycle,
-    Rcpp,
-    magrittr (>= 1.5)
+    magrittr (>= 1.5),
+    Rcpp
 Suggests:
-    markdown (>= 1.1),
+    covr,
     knitr (>= 1.20),
-    testthat (>= 3.0.0),
-    covr
-VignetteBuilder: knitr
+    markdown (>= 1.1),
+    testthat (>= 3.0.0)
+LinkingTo: 
+    Rcpp
+VignetteBuilder: 
+    knitr
 ByteCompile: true
+Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
-Config/testthat/edition: 3
-LinkingTo: 
-    Rcpp
