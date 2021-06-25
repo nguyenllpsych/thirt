@@ -20,10 +20,13 @@ URL: https://nguyenllpsych.github.io/thirt,
      https://github.com/nguyenllpsych/thirt
 Depends: 
     R (>= 4.0.0)
+Remotes:
+    github::swnydick/mupp
 Imports: 
     lifecycle,
     magrittr (>= 1.5),
-    Rcpp
+    Rcpp,
+    mupp
 Suggests:
     covr,
     knitr (>= 1.20),
