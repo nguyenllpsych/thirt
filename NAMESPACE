@@ -2,5 +2,3 @@
 
 export(p_thirt)
 importFrom(Rcpp,sourceCpp)
-importFrom(dplyr,"%>%")
-importFrom(dplyr,mutate)

@@ -80,9 +80,6 @@
 #' summary(prob$probability)
 #' }
 #'
-#' @importFrom dplyr
-#'             mutate "%>%"
-#'
 #' @export
 p_thirt <- function(n_item, n_block, n_person, dict,
                     gamma, lambda, theta, psisq) {
