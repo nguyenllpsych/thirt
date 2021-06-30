@@ -1,88 +1,90 @@
-set.seed(202106)
-
-#####################
-## Test Conditions ##
-#####################
-
-n_item    = 4
-n_block   = 1
-n_dim     = 4
-n_person  = 200
-block_size <- n_item * (n_item - 1) / 2
-
-################
-## Parameters ##
-################
-
-#thresholds - gamma
-#vector of length [total binary outcomes]
-#row names should be of the format "i-j" for item pair ij
-gamma   <- data.frame(gamma = round(runif(n = block_size * n_block, min = -1,  max = 1), digits = 3))
-row.names(gamma) <- c("1-2", "1-3", "1-4", "2-3", "2-4", "3-4")
-
-#loadings - lambda
-#vector of length [total items]
-#row names should be of the format "i" for item i
-lambda  <- data.frame(lambda = round(runif(n = n_item * n_block, min = .65, max = .95), digits = 3))
-
-#uniqueness - psi^2
-#vector of length [total items]
-#row names should be of the format "i" for item i
-psisq   <- data.frame(psisq = round(1 - lambda^2, digits = 3))
-
-#theta - trait scores
-#matrix of dimension [number of people X number of dimensions]
-#row names should be of the format "p" for person p
-theta   <- as.data.frame(matrix(nrow = n_person, ncol = n_dim))
-for (dim in 1:n_dim) {
-  theta[dim] <- round(rnorm(n = n_person, mean = 0, sd = 1), digits = 3)
-} # END for dim LOOP
-
-#create a dictionary with a "dim" column identifying traits
-#   and an "item" column identifying item indicators for different traits
-dict <- data.frame(
-  dim = c(1:n_dim),
-  item = c(1:(n_item * n_block)))
-
-###############
-## Test Data ##
-###############
-
-#data in wide format with all pairs per row
-quads <- as.data.frame(
-  matrix(rbinom(n = n_person * block_size * n_block, size = 1, prob = 0.5),
-         nrow = n_person))
-colnames(quads) <- paste0("i", c(1,1,1,2,2,3),
-                          "i", c(2,3,4,3,4,4))
-
-#data in long format with one pair per row
-quads_long <- data.frame(
-  id    = rep(1:n_person, each = block_size * n_block),
-  block = rep(1:n_block, each = block_size, times = n_person),
-  item1 = rep(c(1,1,1,2,2,3), times = n_person),
-  item2 = rep(c(2,3,4,3,4,4), times = n_person),
-  resp  = rbinom(n = n_person * block_size * n_block, size = 1, prob = 0.5))
-
-#merge gamma, lambda, theta to data frame
-quads_long <- quads_long %>%
-  mutate(gamma   = rep(gamma, times = n_person),
-         lambda1 = lambda[item1],
-         lambda2 = lambda[item2],
-         psisq1  = psisq[item1],
-         psisq2  = psisq[item2])
-for (row in 1:nrow(quads_long)){
-  quads_long[row,'theta1'] = theta[dict[which(dict$item == quads_long[row,]$item1),]$dim][quads_long[row,]$id,]
-  quads_long[row,'theta2'] = theta[dict[which(dict$item == quads_long[row,]$item2),]$dim][quads_long[row,]$id,]
-} #END for row LOOP
-
-data <- quads_long
-
-
-###############################
-## Function Def: Probability ##
-###############################
-
-p_thirt <- function(n_item, n_block, n_person,
+#' Probability calculation
+#'
+#' Calculate the probability of all potential response patterns for each respondent
+#'
+#' @param n_item number of items per block
+#' @param n_block number of blocks
+#' @param n_person number of respondents
+#' @param dict a data.frame with a `dim` column identifying traits by number `1, 2, 3...`
+#'             and an `item` column identifying item indicators for different traits by number `1, 2, 3...`
+#' @param gamma a data.frame with one variable of length `[total binary outcomes]`,
+#'              row names should be of the format `i-j` for item pair `ij`
+#' @param lambda a data.frame with one variable of length `[total items]`,
+#'               row names should be of the format `i` for item `i`
+#' @param theta a data.frame of dimension `[number of people X number of dimensions]`,
+#'              row names should be of the format `p` for person `p`
+#' @param psisq a data.frame with one variable of length `[total items]`,
+#'              row names should be of the format `i` for item `i`
+#'
+#' @return a list of `[permutation_list, probability]`,
+#'         permutation_list is a matrix of dimension `[number of permutations X number of items]`,
+#'         probability is a matrix of dimension `[person X permutation]` of probability for each response pattern
+#'
+#' @examples
+#' \dontrun{
+#' set.seed(202106)
+#'
+#' #####################
+#' ## Test Conditions ##
+#' #####################
+#'
+#' n_item    = 4
+#' n_block   = 1
+#' n_dim     = 4
+#' n_person  = 200
+#' block_size <- n_item * (n_item - 1) / 2
+#'
+#' ################
+#' ## Parameters ##
+#' ################
+#'
+#' #thresholds - gamma
+#' #vector of length [total binary outcomes]
+#' #row names should be of the format "i-j" for item pair ij
+#' gamma   <- data.frame(gamma = round(runif(n = block_size * n_block, min = -1,  max = 1), digits = 3))
+#' row.names(gamma) <- c("1-2", "1-3", "1-4", "2-3", "2-4", "3-4")
+#'
+#' #loadings - lambda
+#' #vector of length [total items]
+#' #row names should be of the format "i" for item i
+#' lambda  <- data.frame(lambda = round(runif(n = n_item * n_block, min = .65, max = .95), digits = 3))
+#'
+#' #uniqueness - psi^2
+#' #vector of length [total items]
+#' #row names should be of the format "i" for item i
+#' psisq   <- data.frame(psisq = round(1 - lambda^2, digits = 3))
+#'
+#' #theta - trait scores
+#' #matrix of dimension [number of people X number of dimensions]
+#' #row names should be of the format "p" for person p
+#' theta   <- as.data.frame(matrix(nrow = n_person, ncol = n_dim))
+#' for (dim in 1:n_dim) {
+#'   theta[dim] <- round(rnorm(n = n_person, mean = 0, sd = 1), digits = 3)
+#' } # END for dim LOOP
+#'
+#' #create a dictionary with a "dim" column identifying traits
+#' #   and an "item" column identifying item indicators for different traits
+#' dict <- data.frame(
+#'   dim = c(1:n_dim),
+#'   item = c(1:(n_item * n_block)))
+#'
+#' ###################
+#' ## Test Function ##
+#' ###################
+#'
+#' #test function with fixed parameters
+#' prob <- p_thirt(n_item, n_block, n_person, dict,
+#'                 gamma, lambda, theta, psisq)
+#'
+#' prob$permutation_list
+#' summary(prob$probability)
+#' }
+#'
+#' @importFrom dplyr
+#'             mutate "%>%"
+#'
+#' @export
+p_thirt <- function(n_item, n_block, n_person, dict,
                     gamma, lambda, theta, psisq) {
 
   #calculate block size
@@ -179,15 +181,3 @@ p_thirt <- function(n_item, n_block, n_person,
 
   #TO DO: multiple blocks
 } # END p_thirt FUNCTION
-
-
-###################
-## Test Function ##
-###################
-
-#test function with fixed parameters
-prob <- p_thirt(n_item, n_block, n_person,
-                gamma, lambda, theta, psisq)
-
-prob$permutation_list
-summary(prob$probability)

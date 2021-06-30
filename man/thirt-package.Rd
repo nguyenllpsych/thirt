@@ -13,6 +13,7 @@ of the Thurstonian FC-IRT model.
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://nguyenllpsych.github.io/thirt}
   \item \url{https://github.com/nguyenllpsych/thirt}
 }
 
