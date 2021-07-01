@@ -54,41 +54,41 @@ block_size <- n_item * (n_item - 1) / 2
 ## Parameters ##
 ################
 
-#thresholds - gamma
-#vector of length [total binary outcomes]
-#row names should be of the format "i-j" for item pair ij
+# thresholds - gamma
+# vector of length [total binary outcomes]
+# row names should be of the format "i-j" for item pair ij
 gamma   <- data.frame(gamma = round(runif(n = block_size * n_block, min = -1,  max = 1), digits = 3))
 row.names(gamma) <- c("1-2", "1-3", "1-4", "2-3", "2-4", "3-4")
 
-#loadings - lambda
-#vector of length [total items]
-#row names should be of the format "i" for item i
+# loadings - lambda
+# vector of length [total items]
+# row names should be of the format "i" for item i
 lambda  <- data.frame(lambda = round(runif(n = n_item * n_block, min = .65, max = .95), digits = 3))
 
-#uniqueness - psi^2
-#vector of length [total items]
-#row names should be of the format "i" for item i
+# uniqueness - psi^2
+# vector of length [total items]
+# row names should be of the format "i" for item i
 psisq   <- data.frame(psisq = round(1 - lambda^2, digits = 3))
 
-#theta - trait scores
-#matrix of dimension [number of people X number of dimensions]
-#row names should be of the format "p" for person p
+# theta - trait scores
+# matrix of dimension [number of people X number of dimensions]
+# row names should be of the format "p" for person p
 theta   <- as.data.frame(matrix(nrow = n_person, ncol = n_dim))
-for (dim in 1:n_dim) {
+for (dim in seq(n_dim)) {
   theta[dim] <- round(rnorm(n = n_person, mean = 0, sd = 1), digits = 3)
 } # END for dim LOOP
 
-#create a dictionary with a "dim" column identifying traits
+# create a dictionary with a "dim" column identifying traits
 #   and an "item" column identifying item indicators for different traits
 dict <- data.frame(
-  dim = c(1:n_dim),
-  item = c(1:(n_item * n_block)))
+  dim = c(seq(n_dim)),
+  item = c(seq(n_item * n_block)))
 
 ###################
 ## Test Function ##
 ###################
 
-#test function with fixed parameters
+# test function with fixed parameters
 prob <- p_thirt(n_item, n_block, n_person, dict,
                 gamma, lambda, theta, psisq)
 
