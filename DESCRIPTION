@@ -26,7 +26,8 @@ Imports:
     lifecycle,
     magrittr (>= 1.5),
     Rcpp,
-    mupp
+    mupp,
+    truncnorm
 Suggests:
     covr,
     knitr (>= 1.20),
