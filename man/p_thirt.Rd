@@ -4,29 +4,24 @@
 \alias{p_thirt}
 \title{Probability calculation}
 \usage{
-p_thirt(n_item, n_block, n_person, dict, gamma, lambda, theta, psisq)
+p_thirt(gamma, item_params, person_params)
 }
 \arguments{
-\item{n_item}{number of items per block}
+\item{gamma}{a data.frame of length \verb{[total binary outcomes]} with two variables:
+variable \code{pair} of the format \code{i-j} for item pair \code{ij}
+variable \code{gamma} for threshold parameters}
 
-\item{n_block}{number of blocks}
+\item{item_params}{a data.frame of length \link{total items} with five variables:
+variable \code{item} of the format \code{i} for item number \code{i},
+variable \code{block} of the format \code{b} for block number \code{b},
+variable \code{dim} of the format \code{d} for dimension number \code{d},
+variable \code{lambda} for loadings,
+variable \code{psisq} for uniqueness,
+variable \code{dim} for dimensions}
 
-\item{n_person}{number of respondents}
-
-\item{dict}{a data.frame with a \code{dim} column identifying traits by number \verb{1, 2, 3...}
-and an \code{item} column identifying item indicators for different traits by number \verb{1, 2, 3...}}
-
-\item{gamma}{a data.frame with one variable of length \verb{[total binary outcomes]},
-row names should be of the format \code{i-j} for item pair \code{ij}}
-
-\item{lambda}{a data.frame with one variable of length \verb{[total items]},
-row names should be of the format \code{i} for item \code{i}}
-
-\item{theta}{a data.frame of dimension \verb{[number of people X number of dimensions]},
-row names should be of the format \code{p} for person \code{p}}
-
-\item{psisq}{a data.frame with one variable of length \verb{[total items]},
-row names should be of the format \code{i} for item \code{i}}
+\item{person_params}{a data.frame of length \verb{[number of people]} with variables:
+variable \code{person} of the format \code{p} for person number \code{p},
+variables named \code{theta_d} for dimension number \code{d}.}
 }
 \value{
 a matrix of dimension \verb{[person X permutation]} of probability
@@ -39,57 +34,15 @@ Calculate the probability of all potential response patterns for each respondent
 \dontrun{
 set.seed(202106)
 
-#####################
-## Test Conditions ##
-#####################
+params <- simulate_thirt_params(n_person = 200,
+                                n_item = 3,
+                                n_block = 2,
+                                n_dim = 3)
+gamma          <- params$gamma
+item_params    <- params$item_params
+person_params  <- params$person_params
 
-n_item    <-  3
-n_block   <-  2
-n_dim     <-  3
-n_person  <-  200
-block_size <- n_item * (n_item - 1) / 2
-
-################
-## Parameters ##
-################
-
-# thresholds - gamma
-# vector of length [total binary outcomes]
-# row names should be of the format "i-j" for item pair ij
-gamma   <- data.frame(gamma = round(runif(n = block_size * n_block, min = -1,  max = 1), digits = 3))
-row.names(gamma) <- c("1-2", "1-3", "2-3", "4-5", "4-6", "5-6")
-
-# loadings - lambda
-# vector of length [total items]
-# row names should be of the format "i" for item i
-lambda  <- data.frame(lambda = round(runif(n = n_item * n_block, min = .65, max = .95), digits = 3))
-
-# uniqueness - psi^2
-# vector of length [total items]
-# row names should be of the format "i" for item i
-psisq   <- data.frame(psisq = round(1 - lambda^2, digits = 3))
-
-# theta - trait scores
-# matrix of dimension [number of people X number of dimensions]
-# row names should be of the format "p" for person p
-theta   <- as.data.frame(matrix(nrow = n_person, ncol = n_dim))
-for (dim in seq(n_dim)) {
-  theta[dim] <- round(rnorm(n = n_person, mean = 0, sd = 1), digits = 3)
-} # END for dim LOOP
-
-# create a dictionary with a "dim" column identifying traits
-#   and an "item" column identifying item indicators for different traits
-dict <- data.frame(
-  dim = c(seq(n_dim)),
-  item = c(seq(n_item * n_block)))
-
-###################
-## Test Function ##
-###################
-
-# test function with fixed parameters
-prob <- p_thirt(n_item, n_block, n_person, dict,
-                gamma, lambda, theta, psisq)
+prob <- p_thirt(gamma, item_params, person_params)
 
 summary(prob)
 }
