@@ -2,19 +2,19 @@
 #'
 #' Calculate the probability of all potential response patterns for each respondent
 #'
-#' @param n_item number of items per block
-#' @param n_block number of blocks
-#' @param n_person number of respondents
-#' @param dict a data.frame with a `dim` column identifying traits by number `1, 2, 3...`
-#'             and an `item` column identifying item indicators for different traits by number `1, 2, 3...`
-#' @param gamma a data.frame with one variable of length `[total binary outcomes]`,
-#'              row names should be of the format `i-j` for item pair `ij`
-#' @param lambda a data.frame with one variable of length `[total items]`,
-#'               row names should be of the format `i` for item `i`
-#' @param theta a data.frame of dimension `[number of people X number of dimensions]`,
-#'              row names should be of the format `p` for person `p`
-#' @param psisq a data.frame with one variable of length `[total items]`,
-#'              row names should be of the format `i` for item `i`
+#' @param gamma a data.frame of length `[total binary outcomes]` with two variables:
+#'              variable `pair` of the format `i-j` for item pair `ij`
+#'              variable `gamma` for threshold parameters
+#' @param item_params a data.frame of length [total items] with five variables:
+#'                    variable `item` of the format `i` for item number `i`,
+#'                    variable `block` of the format `b` for block number `b`,
+#'                    variable `dim` of the format `d` for dimension number `d`,
+#'                    variable `lambda` for loadings,
+#'                    variable `psisq` for uniqueness,
+#'                    variable `dim` for dimensions
+#' @param person_params a data.frame of length `[number of people]` with variables:
+#'                    variable `person` of the format `p` for person number `p`,
+#'                    variables named `theta_d` for dimension number `d`.
 #'
 #' @return a matrix of dimension `[person X permutation]` of probability
 #'         for each response pattern across blocks
@@ -23,57 +23,15 @@
 #' \dontrun{
 #' set.seed(202106)
 #'
-#' #####################
-#' ## Test Conditions ##
-#' #####################
+#' params <- simulate_thirt_params(n_person = 200,
+#'                                 n_item = 3,
+#'                                 n_block = 2,
+#'                                 n_dim = 3)
+#' gamma          <- params$gamma
+#' item_params    <- params$item_params
+#' person_params  <- params$person_params
 #'
-#' n_item    <-  3
-#' n_block   <-  2
-#' n_dim     <-  3
-#' n_person  <-  200
-#' block_size <- n_item * (n_item - 1) / 2
-#'
-#' ################
-#' ## Parameters ##
-#' ################
-#'
-#' # thresholds - gamma
-#' # vector of length [total binary outcomes]
-#' # row names should be of the format "i-j" for item pair ij
-#' gamma   <- data.frame(gamma = round(runif(n = block_size * n_block, min = -1,  max = 1), digits = 3))
-#' row.names(gamma) <- c("1-2", "1-3", "2-3", "4-5", "4-6", "5-6")
-#'
-#' # loadings - lambda
-#' # vector of length [total items]
-#' # row names should be of the format "i" for item i
-#' lambda  <- data.frame(lambda = round(runif(n = n_item * n_block, min = .65, max = .95), digits = 3))
-#'
-#' # uniqueness - psi^2
-#' # vector of length [total items]
-#' # row names should be of the format "i" for item i
-#' psisq   <- data.frame(psisq = round(1 - lambda^2, digits = 3))
-#'
-#' # theta - trait scores
-#' # matrix of dimension [number of people X number of dimensions]
-#' # row names should be of the format "p" for person p
-#' theta   <- as.data.frame(matrix(nrow = n_person, ncol = n_dim))
-#' for (dim in seq(n_dim)) {
-#'   theta[dim] <- round(rnorm(n = n_person, mean = 0, sd = 1), digits = 3)
-#' } # END for dim LOOP
-#'
-#' # create a dictionary with a "dim" column identifying traits
-#' #   and an "item" column identifying item indicators for different traits
-#' dict <- data.frame(
-#'   dim = c(seq(n_dim)),
-#'   item = c(seq(n_item * n_block)))
-#'
-#' ###################
-#' ## Test Function ##
-#' ###################
-#'
-#' # test function with fixed parameters
-#' prob <- p_thirt(n_item, n_block, n_person, dict,
-#'                 gamma, lambda, theta, psisq)
+#' prob <- p_thirt(gamma, item_params, person_params)
 #'
 #' summary(prob)
 #' }
@@ -82,8 +40,26 @@
 #'             find_all_permutations
 #'
 #' @export
-p_thirt <- function(n_item, n_block, n_person, dict,
-                    gamma, lambda, theta, psisq) {
+p_thirt <- function(gamma, item_params, person_params) {
+
+  ##################
+  ## test designs ##
+  ##################
+
+  # number of blocks, dimensions, people, items per block
+  n_block  <- length(unique(item_params$block))
+  n_dim    <- length(unique(item_params$dim))
+  n_person <- nrow(person_params)
+  n_item   <- nrow(item_params)/n_block
+
+  # item parameters as individual data frames
+  lambda  <- data.frame(lambda = item_params$lambda)
+  psisq   <- data.frame(psisq  = item_params$psisq)
+  dict    <- data.frame(item   = seq(nrow(item_params)),
+                        dim    = item_params$dim)
+
+  # person parameters with only thetas
+  theta   <- person_params[,-1]
 
   ######################
   ## all permutations ##
@@ -168,20 +144,20 @@ p_thirt <- function(n_item, n_block, n_person, dict,
         for (pair in colnames(tail(permutation_list[[block]], c(0, -(n_item+1))))){
 
           # p_thirt_one calculations
-          p_one <- p_thirt_one(gamma   = gamma[paste0(pair),],
+          p_one <- p_thirt_one(gamma   = gamma[which(gamma$pair == "1-2"),]$gamma,
                                lambda1 = lambda[split_pair(pair, 1),],
                                lambda2 = lambda[split_pair(pair, 2),],
                                theta1  = theta[
-                                 # select row in theta for person
+                                 # select row in person_params for person
                                  person,
-                                 # select column in theta for the correct dim
+                                 # select column in person_params for the correct dim
                                  dict[
                                    # select the dim from dict for the item
                                    which(dict$item == split_pair(pair, 1)),]$dim],
                                theta2  = theta[
-                                 # select row in theta for the person
+                                 # select row in person_params for the person
                                  person,
-                                 # select column in theta for the correct dim
+                                 # select column in person_params for the correct dim
                                  dict[
                                    # select the dim from dict for the item
                                    which(dict$item == split_pair(pair, 2)),]$dim],
