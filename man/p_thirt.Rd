@@ -29,9 +29,8 @@ row names should be of the format \code{p} for person \code{p}}
 row names should be of the format \code{i} for item \code{i}}
 }
 \value{
-a list of \verb{[permutation_list, probability]},
-permutation_list is a matrix of dimension \verb{[number of permutations X number of items]},
-probability is a matrix of dimension \verb{[person X permutation]} of probability for each response pattern
+a matrix of dimension \verb{[person X permutation]} of probability
+for each response pattern across blocks
 }
 \description{
 Calculate the probability of all potential response patterns for each respondent
@@ -44,10 +43,10 @@ set.seed(202106)
 ## Test Conditions ##
 #####################
 
-n_item    = 4
-n_block   = 1
-n_dim     = 4
-n_person  = 200
+n_item    <-  3
+n_block   <-  2
+n_dim     <-  3
+n_person  <-  200
 block_size <- n_item * (n_item - 1) / 2
 
 ################
@@ -58,7 +57,7 @@ block_size <- n_item * (n_item - 1) / 2
 # vector of length [total binary outcomes]
 # row names should be of the format "i-j" for item pair ij
 gamma   <- data.frame(gamma = round(runif(n = block_size * n_block, min = -1,  max = 1), digits = 3))
-row.names(gamma) <- c("1-2", "1-3", "1-4", "2-3", "2-4", "3-4")
+row.names(gamma) <- c("1-2", "1-3", "2-3", "4-5", "4-6", "5-6")
 
 # loadings - lambda
 # vector of length [total items]
@@ -92,8 +91,7 @@ dict <- data.frame(
 prob <- p_thirt(n_item, n_block, n_person, dict,
                 gamma, lambda, theta, psisq)
 
-prob$permutation_list
-summary(prob$probability)
+summary(prob)
 }
 
 }
