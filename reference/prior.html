@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Probability calculation — p_thirt • thirt</title>
+<title>Prior distributions — prior • thirt</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Probability calculation — p_thirt" />
-<meta property="og:description" content="Calculate the probability of all potential response patterns for each respondent" />
+<meta property="og:title" content="Prior distributions — prior" />
+<meta property="og:description" content="Prior distributions" />
 
 
 
@@ -111,67 +111,49 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Probability calculation</h1>
-    <small class="dont-index">Source: <a href='https://github.com/nguyenllpsych/thirt/blob/master/R/probability.R'><code>R/probability.R</code></a></small>
-    <div class="hidden name"><code>p_thirt.Rd</code></div>
+    <h1>Prior distributions</h1>
+    <small class="dont-index">Source: <a href='https://github.com/nguyenllpsych/thirt/blob/master/R/prior.R'><code>R/prior.R</code></a></small>
+    <div class="hidden name"><code>prior.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Calculate the probability of all potential response patterns for each respondent</p>
+    <p>Prior distributions</p>
     </div>
 
-    <pre class="usage"><span class='fu'>p_thirt</span><span class='op'>(</span><span class='va'>gamma</span>, <span class='va'>item_params</span>, <span class='va'>person_params</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>d_thetas_prior</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>...</span><span class='op'>)</span>
+
+<span class='fu'>d_lambda_prior</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>...</span><span class='op'>)</span>
+
+<span class='fu'>d_psisq_prior</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>...</span><span class='op'>)</span>
+
+<span class='fu'>d_gamma_prior</span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>...</span><span class='op'>)</span>
+
+<span class='fu'>r_thetas_prior</span><span class='op'>(</span><span class='va'>n</span>, <span class='va'>...</span><span class='op'>)</span>
+
+<span class='fu'>r_lambda_prior</span><span class='op'>(</span><span class='va'>n</span>, <span class='va'>...</span><span class='op'>)</span>
+
+<span class='fu'>r_psisq_prior</span><span class='op'>(</span><span class='va'>n</span>, <span class='va'>...</span><span class='op'>)</span>
+
+<span class='fu'>r_gamma_prior</span><span class='op'>(</span><span class='va'>n</span>, <span class='va'>...</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>gamma</th>
-      <td><p>a data.frame of length <code>[total binary outcomes]</code> with two variables:
-variable <code>pair</code> of the format <code>i-j</code> for item pair <code>ij</code>
-variable <code>gamma</code> for threshold parameters</p></td>
+      <th>x</th>
+      <td><p>vector of quantiles</p></td>
     </tr>
     <tr>
-      <th>item_params</th>
-      <td><p>a data.frame of length total items with five variables:
-variable <code>item</code> of the format <code>i</code> for item number <code>i</code>,
-variable <code>block</code> of the format <code>b</code> for block number <code>b</code>,
-variable <code>dim</code> of the format <code>d</code> for dimension number <code>d</code>,
-variable <code>lambda</code> for loadings,
-variable <code>psisq</code> for uniqueness,
-variable <code>dim</code> for dimensions</p></td>
+      <th>...</th>
+      <td><p>additional arguments</p></td>
     </tr>
     <tr>
-      <th>person_params</th>
-      <td><p>a data.frame of length <code>[number of people]</code> with variables:
-variable <code>person</code> of the format <code>p</code> for person number <code>p</code>,
-variables named <code>theta_d</code> for dimension number <code>d</code>.</p></td>
+      <th>n</th>
+      <td><p>number of observations for the simulation</p></td>
     </tr>
     </table>
 
-    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>a matrix of dimension <code>[person X permutation]</code> of probability
-for each response pattern across blocks</p>
-
-    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
-<span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span><span class='op'>(</span><span class='fl'>202106</span><span class='op'>)</span>
-
-<span class='va'>params</span> <span class='op'>&lt;-</span> <span class='fu'><a href='simulate_thirt_params.html'>simulate_thirt_params</a></span><span class='op'>(</span>n_person <span class='op'>=</span> <span class='fl'>200</span>,
-                                n_item <span class='op'>=</span> <span class='fl'>3</span>,
-                                n_block <span class='op'>=</span> <span class='fl'>2</span>,
-                                n_dim <span class='op'>=</span> <span class='fl'>3</span><span class='op'>)</span>
-<span class='va'>gamma</span>          <span class='op'>&lt;-</span> <span class='va'>params</span><span class='op'>$</span><span class='va'>gamma</span>
-<span class='va'>item_params</span>    <span class='op'>&lt;-</span> <span class='va'>params</span><span class='op'>$</span><span class='va'>item_params</span>
-<span class='va'>person_params</span>  <span class='op'>&lt;-</span> <span class='va'>params</span><span class='op'>$</span><span class='va'>person_params</span>
-
-<span class='va'>prob</span> <span class='op'>&lt;-</span> <span class='fu'>p_thirt</span><span class='op'>(</span><span class='va'>gamma</span>, <span class='va'>item_params</span>, <span class='va'>person_params</span><span class='op'>)</span>
-
-<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>prob</span><span class='op'>)</span>
-<span class='op'>}</span>
-
-</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
