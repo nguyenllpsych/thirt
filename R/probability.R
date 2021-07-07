@@ -53,13 +53,13 @@ p_thirt <- function(gamma, item_params, person_params) {
   n_item   <- nrow(item_params)/n_block
 
   # item parameters as individual data frames
-  lambda  <- data.frame(lambda = item_params$lambda)
-  psisq   <- data.frame(psisq  = item_params$psisq)
-  dict    <- data.frame(item   = seq(nrow(item_params)),
-                        dim    = item_params$dim)
+  lambda   <- data.frame(lambda = item_params$lambda)
+  psisq    <- data.frame(psisq  = item_params$psisq)
+  dict     <- data.frame(item   = seq(nrow(item_params)),
+                         dim    = item_params$dim)
 
   # person parameters with only thetas
-  theta   <- person_params[,-1]
+  theta    <- person_params[,-1]
 
   ######################
   ## all permutations ##
@@ -68,19 +68,14 @@ p_thirt <- function(gamma, item_params, person_params) {
   # create an empty list of size n_block
   permutation_list <- vector("list", n_block)
 
-  # create an empty data frame size [n_permutation X block]
-  permutation_list_id <- as.data.frame(
-    matrix(nrow = nrow(find_all_permutations(n = n_item, init = 1)),
-           ncol = n_block)
-  )
-
   # add each block permutation to the list
-  for (block in seq(n_block)) {
+  for (block in seq_len(n_block)) {
 
-    # create permutation list for each block
+    # create permutation list for each block (what if blocksize changes?)
     permutation_block <- as.data.frame(
-      find_all_permutations(n = n_item,
-                            init = 1 + (block - 1) * n_item))
+      find_all_permutations(n    = n_item,
+                            init = 1 + (block - 1) * n_item)
+    )
 
     # id variable to identify each response pattern in a block
     # so later different blocks can be combined in a smaller matrix of ids
@@ -90,38 +85,36 @@ p_thirt <- function(gamma, item_params, person_params) {
       "b", block,
 
       # response pattern identifier
-      "r", seq(nrow(
-        find_all_permutations(n = n_item,
-                              init = 1 + (block - 1) * n_item))))
+      "r", seq(nrow(permutation_block))
+    )
 
     # append each block's permutation to a large permutation list
-    permutation_list[[block]] <- permutation_block
-
-    # append only block/resp id to the data frame permutation_list_id
-    permutation_list_id[,block] <-  permutation_block$id
-
+    permutation_list[[block]]     <- permutation_block
   } # END for block LOOP
 
-  # create a list of all permutations across blocks
-  permutation_list_id <- expand.grid(permutation_list_id, stringsAsFactors = F)
-
   # find all pair combinations specific to each permutation
-  permutation_list <- lapply(permutation_list, function(x) {
-    combo <- combn(min(x$V1):(n_item + min(x$V1) - 1), 2)
-    for (col in seq(ncol(combo))) {
-      for (row in seq(nrow(x))) {
+  permutation_list <- lapply(
+    X   = permutation_list,
+    FUN = function(x) {
 
-        # add a new variable in permutation_list for each pair in combo
-        x[row, paste0(combo[, col][1], "-", combo[, col][2])] =
+      # the combinations and names of those combinations
+      combo <- combn(x = seq(min(x$V1), max(x$V1)),
+                     m = 2)
+      nms   <- paste0(combo[1, ], "-", combo[2, ])
 
-          # if item i in pair ij is ranked higher than item j
-          #   -> variable i-j has value 1, else 0
-          as.numeric(
-            grep(paste0(combo[, col][1]), x[row, seq(n_item)])
-              < grep(paste0(combo[, col][2]), x[row, seq(n_item)]))
-      } # END for row LOOP
-    } # END for col LOOP
-  x}) # END lapply
+      # the values and the column that each preference appears
+      vals  <- as.matrix(x[ , -ncol(x)])
+      cols  <- col(vals)
+
+      # determining whether combination is higher
+      for(col in seq_len(ncol(combo))){
+        col1           <- rowSums(cols * (vals == combo[1, col]))
+        col2           <- rowSums(cols * (vals == combo[2, col]))
+        x[ , nms[col]] <- as.numeric(col2 > col1)
+      }
+
+      x
+  }) # END lapply
 
   #################
   ## probability ##
@@ -139,43 +132,35 @@ p_thirt <- function(gamma, item_params, person_params) {
     )
 
     # joint probability for each permutation per block
-    for (person in seq(nrow(probability))) {
-      for (resp in seq(ncol(probability))) {
-        for (pair in colnames(tail(permutation_list[[block]], c(0, -(n_item+1))))){
+    for (resp in seq(ncol(probability))) {
+      for (pair in colnames(tail(permutation_list[[block]], c(0, -(n_item + 1))))){
 
-          # p_thirt_one calculations
-          p_one <- p_thirt_one(gamma   = gamma[which(gamma$pair == "1-2"),]$gamma,
-                               lambda1 = lambda[split_pair(pair, 1),],
-                               lambda2 = lambda[split_pair(pair, 2),],
-                               theta1  = theta[
-                                 # select row in person_params for person
-                                 person,
-                                 # select column in person_params for the correct dim
-                                 dict[
-                                   # select the dim from dict for the item
-                                   which(dict$item == split_pair(pair, 1)),]$dim],
-                               theta2  = theta[
-                                 # select row in person_params for the person
-                                 person,
-                                 # select column in person_params for the correct dim
-                                 dict[
-                                   # select the dim from dict for the item
-                                   which(dict$item == split_pair(pair, 2)),]$dim],
-                               psisq1  = psisq[split_pair(pair, 1),],
-                               psisq2  = psisq[split_pair(pair, 2),])
+        # index everything
+        pair1     <- split_pair(pair, 1)
+        pair2     <- split_pair(pair, 2)
 
-          # joint multiply all pair-wise probabilities
-          probability[person, resp] = probability[person, resp] *
+        gamma_idx <- gamma$pair == pair
+        dim1      <- dict[dict$item == pair1, ]$dim
+        dim2      <- dict[dict$item == pair2, ]$dim
 
-            # p_one if pair == 1
-            p_one ^ permutation_list[[block]][resp, pair] *
+        # p_thirt_one calculations
+        p_one     <- p_thirt_one(gamma   = gamma[gamma_idx, ]$gamma,
+                                 lambda1 = lambda[pair1, ],
+                                 lambda2 = lambda[pair2, ],
+                                 theta1  = theta[ , dim1],
+                                 theta2  = theta[ , dim2],
+                                 psisq1  = psisq[pair1, ],
+                                 psisq2  = psisq[pair2, ])
 
-            # p_one if pair == 0
-            (1 - p_one) ^ (1 - permutation_list[[block]][resp, pair])
+        # indicating response
+        u_one      <- permutation_list[[block]][resp, pair]
 
-        } # END for pair LOOP
-      } # END for resp LOOP
-    } # END for person LOOP
+        # joint multiply all pair-wise probabilities
+        probability[ , resp] <- {
+          probability[ , resp] * ((p_one ^ u_one) * (1 - p_one) ^ (1 - u_one))
+        }
+      } # END for pair LOOP
+    } # END for resp LOOP
 
     # rename variables in probability matrix to reflect block/resp
     # format: "b", [block number], "r", [response number]
@@ -188,31 +173,7 @@ p_thirt <- function(gamma, item_params, person_params) {
 
   } # END for block LOOP
 
-  # combine probabilities for all blocks in probability_list
-  probability_list <- Reduce(merge_df, probability_list)
-
-  # probability_matrix for all cross-block permutations and probabilities
-  probability_matrix <- as.data.frame(
-    matrix(1,
-           nrow = n_person,
-           ncol = nrow(permutation_list_id))
-  )
-
-  # for each block/resp pattern in permutation_list_id
-  for (respID in seq(nrow(permutation_list_id))) {
-
-    # for each block pattern ("b1r1")
-    for (blockID in permutation_list_id[respID, ]) {
-
-      # joint multiply to compute each column of [person x 1] probabilities in probability_matrix
-      probability_matrix[, respID] = probability_matrix[, respID] *
-        probability_list[, blockID]
-    } # END for blockID LOOP
-  } # END for respID LOOP
-
-  # return probability_matrix: [person X permutation] probabilities
-  return(probability_matrix)
-
+  return(probability_list)
 } # END p_thirt FUNCTION
 
 #######################

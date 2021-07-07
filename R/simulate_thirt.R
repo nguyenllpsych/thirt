@@ -15,7 +15,11 @@ simulate_thirt_params <- function(n_person = 1,
                                   n_block  = 1,
                                   n_dim    = 2) {
 
-  # block size - number of pair per block
+  # argument checks #
+
+  # we should make sure that n_person, n_item, n_block, n_dim are legal!
+
+  # block size - number of pairs per block
   block_size <- n_item * (n_item - 1) / 2
 
   # pair - all possible item pairs per block
