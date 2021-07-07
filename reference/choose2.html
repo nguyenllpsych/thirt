@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Function reference • thirt</title>
+<title>Quicker Combinations IF Choosing 2 — choose2 • thirt</title>
 
 
 <!-- jquery -->
@@ -39,7 +39,8 @@
 
 
 
-<meta property="og:title" content="Function reference" />
+<meta property="og:title" content="Quicker Combinations IF Choosing 2 — choose2" />
+<meta property="og:description" content="Calculate quicker combinations and choose output if only choosing 2" />
 
 
 
@@ -58,7 +59,7 @@
   </head>
 
   <body data-spy="scroll" data-target="#toc">
-    <div class="container template-reference-index">
+    <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -108,66 +109,37 @@
       </header>
 
 <div class="row">
-  <div class="contents col-md-9">
+  <div class="col-md-9 contents">
     <div class="page-header">
-      <h1>Reference</h1>
+    <h1>Quicker Combinations IF Choosing 2</h1>
+    <small class="dont-index">Source: <a href='https://github.com/nguyenllpsych/thirt/blob/master/R/choose2.R'><code>R/choose2.R</code></a></small>
+    <div class="hidden name"><code>choose2.Rd</code></div>
     </div>
 
-    <table class="ref-index">
+    <div class="ref-description">
+    <p>Calculate quicker combinations and choose output if only choosing 2</p>
+    </div>
 
-    <colgroup>
-      
-      <col class="alias" />
-      <col class="title" />
-    </colgroup>
+    <pre class="usage"><span class='fu'>choose2</span><span class='op'>(</span>n <span class='op'>=</span> <span class='fl'>2</span><span class='op'>)</span>
 
-    <tbody>
-      <tr>
-        <th colspan="2">
-          <h2 id="section-all-functions" class="hasAnchor"><a href="#section-all-functions" class="anchor"></a>All functions</h2>
-          <p class="section-desc"></p>
-        </th>
-      </tr>
-      
-      
-    </tbody><tbody>
-      
-      
-      <tr>
-        
-        <td>
-          <p><code><a href="choose2.html">choose2()</a></code> <code><a href="choose2.html">combn2()</a></code> </p>
-        </td>
-        <td><p>Quicker Combinations IF Choosing 2</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="p_thirt.html">p_thirt()</a></code> </p>
-        </td>
-        <td><p>Probability calculation</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="prior.html">d_thetas_prior()</a></code> <code><a href="prior.html">d_lambda_prior()</a></code> <code><a href="prior.html">d_psisq_prior()</a></code> <code><a href="prior.html">d_gamma_prior()</a></code> <code><a href="prior.html">r_thetas_prior()</a></code> <code><a href="prior.html">r_lambda_prior()</a></code> <code><a href="prior.html">r_psisq_prior()</a></code> <code><a href="prior.html">r_gamma_prior()</a></code> </p>
-        </td>
-        <td><p>Prior distributions</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="simulate_thirt_params.html">simulate_thirt_params()</a></code> </p>
-        </td>
-        <td><p>Simulate parameters</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="thirt-package.html">thirt-package</a></code> </p>
-        </td>
-        <td><p>thirt: Thurstonian FC-IRT Model</p></td>
-      </tr>
-    </tbody>
+<span class='fu'>combn2</span><span class='op'>(</span>n <span class='op'>=</span> <span class='fl'>2</span><span class='op'>)</span></pre>
+
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>n</th>
+      <td><p>integer indicating the total number of cases from which to choose 2</p></td>
+    </tr>
     </table>
-  </div>
 
+    <h2 class="hasAnchor" id="note"><a class="anchor" href="#note"></a>Note</h2>
+
+    <p>To make these functions fast, they do not check their arguments. Please
+use these functions with caution, as incorrect arguments might have
+unpredictable responses.</p>
+
+  </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
       <h2 data-toc-skip>Contents</h2>
