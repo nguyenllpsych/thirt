@@ -5,19 +5,19 @@
 #' @param gamma a data.frame of length `[total binary outcomes]` with two variables:
 #'              variable `pair` of the format `i-j` for item pair `ij`
 #'              variable `gamma` for threshold parameters
-#' @param item_params a data.frame of length [total items] with five variables:
-#'                    variable `item` of the format `i` for item number `i`,
-#'                    variable `block` of the format `b` for block number `b`,
-#'                    variable `dim` of the format `d` for dimension number `d`,
-#'                    variable `lambda` for loadings,
-#'                    variable `psisq` for uniqueness,
-#'                    variable `dim` for dimensions
-#' @param person_params a data.frame of length `[number of people]` with variables:
-#'                    variable `person` of the format `p` for person number `p`,
-#'                    variables named `theta_d` for dimension number `d`.
+#' @param items a data.frame of length [total items] with five variables:
+#'              variable `item` of the format `i` for item number `i`,
+#'              variable `block` of the format `b` for block number `b`,
+#'              variable `dim` of the format `d` for dimension number `d`,
+#'              variable `lambda` for loadings,
+#'              variable `psisq` for uniqueness,
+#'              variable `dim` for dimensions
+#' @param persons a data.frame of length `[number of people]` with variables:
+#'                variable `person` of the format `p` for person number `p`,
+#'                variables named `theta_d` for dimension number `d`.
 #'
-#' @return a matrix of dimension `[person X permutation]` of probability
-#'         for each response pattern across blocks
+#' @return a list of length `[block]` of data frames with dimension `[person X permutation]`
+#'         of probability for each response pattern per block
 #'
 #' @examples
 #' \dontrun{
@@ -27,11 +27,8 @@
 #'                                 n_item = 3,
 #'                                 n_block = 2,
 #'                                 n_dim = 3)
-#' gamma          <- params$gamma
-#' item_params    <- params$item_params
-#' person_params  <- params$person_params
 #'
-#' prob <- p_thirt(gamma, item_params, person_params)
+#' prob <- p_thirt(params$gamma, params$items, params$persons)
 #'
 #' summary(prob)
 #' }
@@ -40,26 +37,26 @@
 #'             find_all_permutations
 #'
 #' @export
-p_thirt <- function(gamma, item_params, person_params) {
+p_thirt <- function(gamma, items, persons) {
 
   ##################
   ## test designs ##
   ##################
 
   # number of blocks, dimensions, people, items per block
-  n_block  <- length(unique(item_params$block))
-  n_dim    <- length(unique(item_params$dim))
-  n_person <- nrow(person_params)
-  n_item   <- nrow(item_params)/n_block
+  n_block  <- length(unique(items$block))
+  n_dim    <- length(unique(items$dim))
+  n_person <- nrow(persons)
+  n_item   <- as.data.frame(table(items$block))[,2]
 
   # item parameters as individual data frames
-  lambda   <- data.frame(lambda = item_params$lambda)
-  psisq    <- data.frame(psisq  = item_params$psisq)
-  dict     <- data.frame(item   = seq(nrow(item_params)),
-                         dim    = item_params$dim)
+  lambda   <- data.frame(lambda = items$lambda)
+  psisq    <- data.frame(psisq  = items$psisq)
+  dict     <- data.frame(item   = items$item,
+                         dim    = items$dim)
 
   # person parameters with only thetas
-  theta    <- person_params[,-1]
+  theta    <- persons[, -1]
 
   ######################
   ## all permutations ##
@@ -71,10 +68,15 @@ p_thirt <- function(gamma, item_params, person_params) {
   # add each block permutation to the list
   for (block in seq_len(n_block)) {
 
-    # create permutation list for each block (what if blocksize changes?)
+    # create permutation list for each block
     permutation_block <- as.data.frame(
-      find_all_permutations(n    = n_item,
-                            init = 1 + (block - 1) * n_item)
+      find_all_permutations(n    = n_item[block],
+                            init = ifelse(
+                              # for first block, init = 1
+                              block == 1, 1,
+
+                              # for subsequent block, init =
+                              1 + n_item[block - 1] * (block - 1)))
     )
 
     # id variable to identify each response pattern in a block
