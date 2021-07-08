@@ -153,6 +153,11 @@ p_thirt <- function(gamma, item_params, person_params) {
         #       as it only sums up to 1 if you have 2 ^ n combinations rather
         #       than n!. but n! is right, so the probabilities aren't combined
         #       correctly.
+        #
+        # What we want:
+        # P(x_1 > x_2 > x_3) = P(x_1 > x_2, x_3) * P(x_2 > x_3)
+        # where
+        # P(x_1 > x_2, x_3)  = [P(x_1 > x_2) * P(x_1 > x_3)] / [P(x_1 > x_2) * P(x_1 > x_3) + P(x_2 > x_1) * P(x_2 > x_3) + P(x_3 > x_1) * P(x_3 > x_2)]
 
         # indicating response
         u_one      <- permutation_list[[block]][resp, pair]
