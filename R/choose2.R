@@ -21,14 +21,26 @@ choose2 <- function(n = 2){
 #' @export
 combn2 <- function(n = 2){
 
-  # determine size of matrix
-  n_r <- choose2(n)
-  n_c <- 2
+  if(length(n) > 1){
+    x <- n
+    n <- length(x)
+  } else{
+    x <- seq_len(n)
+  }
 
-  # create matrix and list
-  m   <- matrix(nrow = n_r,
-                ncol = n_c)
-  x   <- seq_len(n)
+  # put everything into an example matrix
+  cx   <- matrix(data = x,
+                 nrow = n,
+                 ncol = n)
+  rx   <- t(cx)
 
-  # TODO: put everything into matrix
+  # pull out the lower triangle flag
+  flag <- lower.tri(rx)
+
+  # pull out the row/col number
+  v1  <- rx[flag]
+  v2  <- cx[flag]
+
+  # put together
+  rbind(v1, v2)
 }

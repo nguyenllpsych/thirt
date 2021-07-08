@@ -40,15 +40,15 @@ simulate_thirt_params <- function(n_person = 1,
   ################
 
   # block size - number of pairs per block
-  block_size <- n_item * (n_item - 1) / 2
+  block_size <- choose2(n_item)
 
   # empty list for pair names across all blocks
   pairs <- c()
 
   # pairs for first block
-  combo <- combn(seq(from = 1, to = n_item[1]),
-                 m = 2)
-  for (pair in seq(ncol(combo))) {
+  combo <- combn2(seq(from = 1, to = n_item[1]),
+                  m = 2)
+  for (pair in seq_len(ncol(combo))) {
     pairs <- append(pairs, paste0(combo[1, pair], "-", combo[2, pair]))
   }
 
@@ -90,8 +90,14 @@ simulate_thirt_params <- function(n_person = 1,
   names(persons)[2:(n_dim + 1)] <- paste0("theta_", seq(n_dim))
 
   # return lists
+<<<<<<< HEAD
   return(list("gamma"   = gamma,
               "items"   = item,
               "persons" = persons))
 
+=======
+  return(list("gamma" = gamma,
+              "item_params"   = item_params,
+              "person_params" = person_params))
+>>>>>>> c6a93012204e740083af14332b80ebbf76486779
 } # END simulate_thirt_params FUNCTION
