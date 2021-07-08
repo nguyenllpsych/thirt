@@ -98,8 +98,7 @@ p_thirt <- function(gamma, item_params, person_params) {
     FUN = function(x) {
 
       # the combinations and names of those combinations
-      combo <- combn(x = seq(min(x$V1), max(x$V1)),
-                     m = 2)
+      combo <- combn2(seq(min(x$V1), max(x$V1)))
       nms   <- paste0(combo[1, ], "-", combo[2, ])
 
       # the values and the column that each preference appears
@@ -125,11 +124,9 @@ p_thirt <- function(gamma, item_params, person_params) {
 
   # probability_list is a [person X (permutation X block)] data frame
   for (block in seq(n_block)) {
-    probability <- as.data.frame(
-      matrix(1,
-             nrow = n_person,
-             ncol = nrow(permutation_list[[block]]))
-    )
+    probability <- matrix(1,
+                          nrow = n_person,
+                          ncol = nrow(permutation_list[[block]]))
 
     # joint probability for each permutation per block
     for (resp in seq(ncol(probability))) {
@@ -152,6 +149,11 @@ p_thirt <- function(gamma, item_params, person_params) {
                                  psisq1  = psisq[pair1, ],
                                  psisq2  = psisq[pair2, ])
 
+        # note: I don't think this is the right way of thinking about this,
+        #       as it only sums up to 1 if you have 2 ^ n combinations rather
+        #       than n!. but n! is right, so the probabilities aren't combined
+        #       correctly.
+
         # indicating response
         u_one      <- permutation_list[[block]][resp, pair]
 
@@ -161,6 +163,9 @@ p_thirt <- function(gamma, item_params, person_params) {
         }
       } # END for pair LOOP
     } # END for resp LOOP
+
+    # is this the right way to do this?
+    probability <- diag(1 / rowSums(probability)) %*% probability
 
     # rename variables in probability matrix to reflect block/resp
     # format: "b", [block number], "r", [response number]
@@ -183,9 +188,11 @@ p_thirt <- function(gamma, item_params, person_params) {
 # individual pair-wise probability
 p_thirt_one <- function(gamma, lambda1, lambda2,
                         theta1, theta2, psisq1, psisq2) {
-  prob = pnorm((-gamma + lambda1 * theta1 - lambda2 * theta2)/
-                 sqrt(psisq1^2 + psisq2^2))
-  return(prob)
+
+  num <- -gamma + lambda1 * theta1 - lambda2 * theta2
+  den <- sqrt(psisq1^2 + psisq2^2)
+
+  pnorm(num / den)
 } # END p_thirt_one FUNCTION
 
 # split pair name to select first or second item

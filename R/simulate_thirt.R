@@ -20,15 +20,14 @@ simulate_thirt_params <- function(n_person = 1,
   # we should make sure that n_person, n_item, n_block, n_dim are legal!
 
   # block size - number of pairs per block
-  block_size <- n_item * (n_item - 1) / 2
+  block_size <- choose2(n_item)
 
   # pair - all possible item pairs per block
   pairs <- c("")
-  for (block in seq(n_block)) {
-    combo <- combn(seq(from = 1 + n_item * (block - 1),
-                       to   = n_item * block),
-                   m = 2)
-    for (pair in seq(ncol(combo))){
+  for (block in seq_len(n_block)) {
+    combo <- combn2(seq(from = 1 + n_item * (block - 1),
+                        to   = n_item * block))
+    for (pair in seq_len(ncol(combo))){
       pairs[[pair + (block - 1) * block_size]] <- paste0(combo[1, pair], "-", combo[2, pair])
     } # END for pair LOOP
   } # END for block LOOP
@@ -58,5 +57,4 @@ simulate_thirt_params <- function(n_person = 1,
   return(list("gamma" = gamma,
               "item_params"   = item_params,
               "person_params" = person_params))
-
 } # END simulate_thirt_params FUNCTION
