@@ -192,8 +192,3 @@ p_thirt_one <- function(gamma, lambda1, lambda2,
 split_pair <- function(pair, item) {
   return(unlist(strsplit(pair, split = "-"))[item])
 } # END split_pair FUNCTION
-
-# merge all data frames in a list
-merge_df <- function(df1, df2) {
-  cbind(df1, df2)
-}
