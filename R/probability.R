@@ -47,7 +47,7 @@ p_thirt <- function(gamma, items, persons) {
   n_block  <- length(unique(items$block))
   n_dim    <- length(unique(items$dim))
   n_person <- nrow(persons)
-  n_item   <- as.data.frame(table(items$block))[,2]
+  n_item   <- as.data.frame(table(items$block))[ , 2]
 
   # item parameters as individual data frames
   lambda   <- data.frame(lambda = items$lambda)
@@ -56,7 +56,7 @@ p_thirt <- function(gamma, items, persons) {
                          dim    = items$dim)
 
   # person parameters with only thetas
-  theta    <- persons[, -1]
+  theta    <- persons[ , -1]
 
   ######################
   ## all permutations ##
@@ -122,6 +122,49 @@ p_thirt <- function(gamma, items, persons) {
   #################
 
   # create an empty list of size n_block
+  probability_pair <- vector("list", n_block)
+
+  # probability_pair is list of size [n_block] with [person X block_size] matrices
+  for (block in seq_len(n_block)) {
+
+    # for each block create an empty matrix of size [person X block_size]
+    probability_pair[[block]] <-
+      matrix(NA,
+             nrow = n_person,
+             ncol = ncol(tail(
+               permutation_list[[block]], c(0, -(n_item[block] + 1))))
+    )
+
+    # column names of each matrix indicate the item pairs in a block
+    colnames(probability_pair[[block]]) <- colnames(
+      tail(permutation_list[[block]], c(0, -(n_item[block] + 1)))
+    )
+
+    # populate matrices with pair-wise probabilities
+    for (pair in colnames(probability_pair[[block]])) {
+
+      # index everything
+      pair1     <- split_pair(pair, 1)
+      pair2     <- split_pair(pair, 2)
+
+      gamma_idx <- gamma$pair == pair
+      dim1      <- dict[dict$item == pair1, ]$dim
+      dim2      <- dict[dict$item == pair2, ]$dim
+
+      # p_thirt_one calculations
+      probability_pair[[block]][ , pair] <-
+        p_thirt_one(gamma   = gamma[gamma_idx, ]$gamma,
+                    lambda1 = lambda[pair1, ],
+                    lambda2 = lambda[pair2, ],
+                    theta1  = theta[ , dim1],
+                    theta2  = theta[ , dim2],
+                    psisq1  = psisq[pair1, ],
+                    psisq2  = psisq[pair2, ])
+    }
+  } # END for block LOOP
+
+  # TO DO: GENERALIZE CALCULATION FOR PROBABILITY COMBINATIONS
+  # create an empty list of size n_block
   probability_list <- vector("list", n_block)
 
   # probability_list is a [person X (permutation X block)] data frame
@@ -132,7 +175,7 @@ p_thirt <- function(gamma, items, persons) {
 
     # joint probability for each permutation per block
     for (resp in seq(ncol(probability))) {
-      for (pair in colnames(tail(permutation_list[[block]], c(0, -(n_item + 1))))){
+      for (pair in colnames(tail(permutation_list[[block]], c(0, -(n_item[block] + 1))))){
 
         # index everything
         pair1     <- split_pair(pair, 1)
@@ -172,13 +215,13 @@ p_thirt <- function(gamma, items, persons) {
     } # END for resp LOOP
 
     # is this the right way to do this?
-    probability <- diag(1 / rowSums(probability)) %*% probability
+    #probability <- diag(1 / rowSums(probability)) %*% probability
 
     # rename variables in probability matrix to reflect block/resp
     # format: "b", [block number], "r", [response number]
     # e.g.  : b1r1 = 1st response pattern in 1st block
     # block/resp keys are in permutation_list[[block]]
-    names(probability) <- c(permutation_list[[block]]$id)
+    colnames(probability) <- c(permutation_list[[block]]$id)
 
     # append each block's probability matrix to large probability_list
     probability_list[[block]] <- probability
