@@ -4,14 +4,14 @@
 \alias{p_thirt}
 \title{Probability calculation}
 \usage{
-p_thirt(gamma, item_params, person_params)
+p_thirt(gamma, items, persons)
 }
 \arguments{
 \item{gamma}{a data.frame of length \verb{[total binary outcomes]} with two variables:
 variable \code{pair} of the format \code{i-j} for item pair \code{ij}
 variable \code{gamma} for threshold parameters}
 
-\item{item_params}{a data.frame of length \link{total items} with five variables:
+\item{items}{a data.frame of length \link{total items} with five variables:
 variable \code{item} of the format \code{i} for item number \code{i},
 variable \code{block} of the format \code{b} for block number \code{b},
 variable \code{dim} of the format \code{d} for dimension number \code{d},
@@ -19,13 +19,13 @@ variable \code{lambda} for loadings,
 variable \code{psisq} for uniqueness,
 variable \code{dim} for dimensions}
 
-\item{person_params}{a data.frame of length \verb{[number of people]} with variables:
+\item{persons}{a data.frame of length \verb{[number of people]} with variables:
 variable \code{person} of the format \code{p} for person number \code{p},
 variables named \code{theta_d} for dimension number \code{d}.}
 }
 \value{
-a matrix of dimension \verb{[person X permutation]} of probability
-for each response pattern across blocks
+a list of length \verb{[block]} of data frames with dimension \verb{[person X permutation]}
+of probability for each response pattern per block
 }
 \description{
 Calculate the probability of all potential response patterns for each respondent
@@ -38,11 +38,8 @@ params <- simulate_thirt_params(n_person = 200,
                                 n_item = 3,
                                 n_block = 2,
                                 n_dim = 3)
-gamma          <- params$gamma
-item_params    <- params$item_params
-person_params  <- params$person_params
 
-prob <- p_thirt(gamma, item_params, person_params)
+prob <- p_thirt(params$gamma, params$items, params$persons)
 
 summary(prob)
 }

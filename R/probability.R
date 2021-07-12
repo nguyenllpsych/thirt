@@ -117,9 +117,9 @@ p_thirt <- function(gamma, items, persons) {
       x
   }) # END lapply
 
-  #################
-  ## probability ##
-  #################
+  ###########################
+  ## probability pair-wise ##
+  ###########################
 
   # create an empty list of size n_block
   probability_pair <- vector("list", n_block)
@@ -161,61 +161,42 @@ p_thirt <- function(gamma, items, persons) {
                     psisq1  = psisq[pair1, ],
                     psisq2  = psisq[pair2, ])
     }
+
+    # add probabilities of reverse response patterns
+    # with pair names formatted for easier access
+    names <- colnames(probability_pair[[block]])
+    for (col in seq_len(ncol(probability_pair[[block]]))) {
+
+      # create and bind new col = 1 - old col
+      newcol = 1 - probability_pair[[block]][,col]
+      probability_pair[[block]] = cbind(probability_pair[[block]], newcol)
+
+      # correct format for pair names, e.g. "2-1"
+      names <- append(names,
+                      paste0(
+                        # 2nd item switched to 1st position
+                        split_pair(colnames(probability_pair[[block]])[col], 2),
+                        "-",
+                        split_pair(colnames(probability_pair[[block]])[col], 1)))
+      colnames(probability_pair[[block]]) = names
+    } # END for col LOOP
   } # END for block LOOP
 
-  # TO DO: GENERALIZE CALCULATION FOR PROBABILITY COMBINATIONS
+
+  #################################
+  ## probability ranked sequence ##
+  #################################
+
   # create an empty list of size n_block
   probability_list <- vector("list", n_block)
 
-  # probability_list is a [person X (permutation X block)] data frame
-  for (block in seq(n_block)) {
+  # probability_list is a list of length [n_block]
+  #   that includes data frames `probability` of size [n_person X permutation]
+  #   for probabilities of different response patterns per block
+  for (block in seq_len(n_block)) {
     probability <- matrix(1,
                           nrow = n_person,
                           ncol = nrow(permutation_list[[block]]))
-
-    # joint probability for each permutation per block
-    for (resp in seq(ncol(probability))) {
-      for (pair in colnames(tail(permutation_list[[block]], c(0, -(n_item[block] + 1))))){
-
-        # index everything
-        pair1     <- split_pair(pair, 1)
-        pair2     <- split_pair(pair, 2)
-
-        gamma_idx <- gamma$pair == pair
-        dim1      <- dict[dict$item == pair1, ]$dim
-        dim2      <- dict[dict$item == pair2, ]$dim
-
-        # p_thirt_one calculations
-        p_one     <- p_thirt_one(gamma   = gamma[gamma_idx, ]$gamma,
-                                 lambda1 = lambda[pair1, ],
-                                 lambda2 = lambda[pair2, ],
-                                 theta1  = theta[ , dim1],
-                                 theta2  = theta[ , dim2],
-                                 psisq1  = psisq[pair1, ],
-                                 psisq2  = psisq[pair2, ])
-
-        # note: I don't think this is the right way of thinking about this,
-        #       as it only sums up to 1 if you have 2 ^ n combinations rather
-        #       than n!. but n! is right, so the probabilities aren't combined
-        #       correctly.
-        #
-        # What we want:
-        # P(x_1 > x_2 > x_3) = P(x_1 > x_2, x_3) * P(x_2 > x_3)
-        # where
-        # P(x_1 > x_2, x_3)  = [P(x_1 > x_2) * P(x_1 > x_3)] / [P(x_1 > x_2) * P(x_1 > x_3) + P(x_2 > x_1) * P(x_2 > x_3) + P(x_3 > x_1) * P(x_3 > x_2)]
-
-        # indicating response
-        u_one      <- permutation_list[[block]][resp, pair]
-
-        # joint multiply all pair-wise probabilities
-        probability[ , resp] <- {
-          probability[ , resp] * ((p_one ^ u_one) * (1 - p_one) ^ (1 - u_one))
-        }
-      } # END for pair LOOP
-    } # END for resp LOOP
-
-    # is this the right way to do this?
-    #probability <- diag(1 / rowSums(probability)) %*% probability
 
     # rename variables in probability matrix to reflect block/resp
     # format: "b", [block number], "r", [response number]
@@ -223,11 +204,68 @@ p_thirt <- function(gamma, items, persons) {
     # block/resp keys are in permutation_list[[block]]
     colnames(probability) <- c(permutation_list[[block]]$id)
 
-    # append each block's probability matrix to large probability_list
+    # probability for each permutation per block
+    # iterate through response patterns per block
+    for (resp in colnames(probability)) {
+
+      # iterate through number of separate probabilities to joint multiply
+      # moving from the end/smaller probability first
+      # e.g. 2 master probabilities for 3 items: p(1 > 2, 3) * p(2 > 3)
+      for (probmaster in seq_len(n_item[block] - 1)) {
+
+        # iterate through number of probabilities in the numerator
+        # e.g. 2 probabilities in numerator of 2nd master probability
+        #      p(1 > 2, 3) => p(1 > 2) * p(1 > 3) in numerator
+        num_list <- c()
+        for (numlen in seq_len(probmaster)) {
+          num = join_pair(df   = permutation_list[[block]],
+                          resp = resp,
+                          col = c(n_item[block] - probmaster,
+                                  n_item[block] - (probmaster - 1 * numlen)))
+          num_list <- append(num_list, num)
+        } # END for numlen LOOP
+
+        # create a list of all items present in the numerators
+        item_list <- unique(as.numeric(split_pair(num_list)))
+
+        # create a list of all denominators that correspond to a numerator
+        #   each element in den_list is a vector
+        den_list  <- vector("list", length = length(item_list))
+        for (item in seq(length(item_list))) {
+          den_list[[item]] <- paste0(item_list[item], "-", item_list[-item])
+        } # END for item LOOP
+
+        # probability calculation: (1) cumprod elements within each vector in den_list
+        #                          (2) cumsum all vectors within den_list
+        #                          (3) cumprod elements in num_list
+        #                          (4) divide (3) by (2)
+        #                          (5) cumprod (4) across all num/dem in probmaster
+        step2 <- matrix(0, nrow = n_person, ncol = 1)
+        for (den in seq(length(den_list))){
+
+          # step 1: cumprod elements within each vector in den_list
+          step1 <- apply(as.matrix(probability_pair[[block]][ , den_list[[den]]]),
+                         MARGIN = 1,
+                         FUN = "prod")
+
+          # step 2: cumsum all vectors within den_list
+          step2 <- step2 + step1
+        }
+
+        # step 3: cumprod elements in num_list
+        step3   <- apply(as.matrix(probability_pair[[block]][ , num_list]),
+                         MARGIN = 1,
+                         FUN = "prod")
+
+        # step 4: divide (3) by (2)
+        step4   <- step3/step2
+
+        # step 5: cumprod (4) across all num/dem in probmaster
+        probability[ , resp] <- probability[ , resp] * step4
+      } # END for probmaster LOOP
+    } # END for resp LOOP
     probability_list[[block]] <- probability
-
   } # END for block LOOP
-
   return(probability_list)
 } # END p_thirt FUNCTION
 
@@ -249,3 +287,8 @@ p_thirt_one <- function(gamma, lambda1, lambda2,
 split_pair <- function(pair, item) {
   return(unlist(strsplit(pair, split = "-"))[item])
 } # END split_pair FUNCTION
+
+# join pair name from separate first and second items
+join_pair <- function(df, resp, col) {
+  return(paste0(df[which(df$id == resp),][col[1]], "-", df[which(df$id == resp),][col[2]]))
+}
