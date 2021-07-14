@@ -6,7 +6,7 @@ test_that("all probabilities sum up to one", {
                                    n_block = 2,
                                    n_dim = 3)
 
-   prob <- p_thirt(params$gamma, params$items, params$persons)
+   prob <- do.call(p_thirt, params)
 
    for(block in seq(length(prob))){
       expect_equal(as.matrix(rowSums(prob[[block]])),
