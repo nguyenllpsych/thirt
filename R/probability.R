@@ -3,21 +3,21 @@
 #' Calculate the probability of all potential response patterns for each respondent
 #'
 #' @param gamma a data.frame of length `[total binary outcomes]` with two variables:
-#'              variable `pair` of the format `i-j` for item pair `ij`
-#'              variable `gamma` for threshold parameters
+#'              variable `pair` of the format `i-j` for item pair `ij`,
+#'              variable `gamma` for threshold parameters.
 #' @param items a data.frame of length [total items] with five variables:
 #'              variable `item` of the format `i` for item number `i`,
 #'              variable `block` of the format `b` for block number `b`,
 #'              variable `dim` of the format `d` for dimension number `d`,
 #'              variable `lambda` for loadings,
 #'              variable `psisq` for uniqueness,
-#'              variable `dim` for dimensions
+#'              variable `dim` for dimensions.
 #' @param persons a data.frame of length `[number of people]` with variables:
 #'                variable `person` of the format `p` for person number `p`,
 #'                variables named `theta_d` for dimension number `d`.
 #'
 #' @return a list of length `[block]` of matrices with dimension `[person X permutation]`
-#'         of probabilities for each response pattern per block
+#'         of probabilities for each response pattern per block.
 #'
 #' @examples
 #' \dontrun{
@@ -286,6 +286,11 @@ p_thirt <- function(gamma, items, persons) {
       } # END for probmaster LOOP
     } # END for resp LOOP
 
+    # convert names of response patterns to numeric
+    # compatible with mupp::find_permutation_order()
+    colnames(probability) <- seq_len(ncol(probability))
+
+    # add probability matrix of each block to probability_list
     probability_list[[block]] <- probability
 
   } # END for block LOOP

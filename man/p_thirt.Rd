@@ -8,8 +8,8 @@ p_thirt(gamma, items, persons)
 }
 \arguments{
 \item{gamma}{a data.frame of length \verb{[total binary outcomes]} with two variables:
-variable \code{pair} of the format \code{i-j} for item pair \code{ij}
-variable \code{gamma} for threshold parameters}
+variable \code{pair} of the format \code{i-j} for item pair \code{ij},
+variable \code{gamma} for threshold parameters.}
 
 \item{items}{a data.frame of length \link{total items} with five variables:
 variable \code{item} of the format \code{i} for item number \code{i},
@@ -17,7 +17,7 @@ variable \code{block} of the format \code{b} for block number \code{b},
 variable \code{dim} of the format \code{d} for dimension number \code{d},
 variable \code{lambda} for loadings,
 variable \code{psisq} for uniqueness,
-variable \code{dim} for dimensions}
+variable \code{dim} for dimensions.}
 
 \item{persons}{a data.frame of length \verb{[number of people]} with variables:
 variable \code{person} of the format \code{p} for person number \code{p},
@@ -25,7 +25,7 @@ variables named \code{theta_d} for dimension number \code{d}.}
 }
 \value{
 a list of length \verb{[block]} of matrices with dimension \verb{[person X permutation]}
-of probabilities for each response pattern per block
+of probabilities for each response pattern per block.
 }
 \description{
 Calculate the probability of all potential response patterns for each respondent
