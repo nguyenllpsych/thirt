@@ -24,8 +24,8 @@ variable \code{person} of the format \code{p} for person number \code{p},
 variables named \code{theta_d} for dimension number \code{d}.}
 }
 \value{
-a list of length \verb{[block]} of data frames with dimension \verb{[person X permutation]}
-of probability for each response pattern per block
+a list of length \verb{[block]} of matrices with dimension \verb{[person X permutation]}
+of probabilities for each response pattern per block
 }
 \description{
 Calculate the probability of all potential response patterns for each respondent
@@ -35,13 +35,15 @@ Calculate the probability of all potential response patterns for each respondent
 set.seed(202106)
 
 params <- simulate_thirt_params(n_person = 200,
-                                n_item = 3,
-                                n_block = 2,
-                                n_dim = 3)
+                                n_item   = 3,
+                                n_block  = 2,
+                                n_dim    = 3)
 
-prob <- p_thirt(params$gamma, params$items, params$persons)
+prob   <- do.call(p_thirt, params)
 
-summary(prob)
+for(block in seq_along(prob)){
+  print(summary(prob[[block]]))
+}
 }
 
 }

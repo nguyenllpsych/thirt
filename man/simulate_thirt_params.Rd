@@ -4,7 +4,7 @@
 \alias{simulate_thirt_params}
 \title{Simulate parameters}
 \usage{
-simulate_thirt_params(n_person = 2, n_item = c(2, 4), n_block = 2, n_dim = 3)
+simulate_thirt_params(n_person = 2, n_item = c(2, 4), n_block = 2, n_dim = 4)
 }
 \arguments{
 \item{n_person}{integer indicating the number of people}

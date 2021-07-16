@@ -30,8 +30,9 @@
 #'
 #' prob   <- do.call(p_thirt, params)
 #'
-#' for(block in seq_along(prob))){
+#' for(block in seq_along(prob)){
 #'   print(summary(prob[[block]]))
+#' }
 #' }
 #'
 #' @importFrom mupp
