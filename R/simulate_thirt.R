@@ -13,7 +13,7 @@
 simulate_thirt_params <- function(n_person = 2,
                                   n_item   = c(2, 4),
                                   n_block  = 2,
-                                  n_dim    = 3) {
+                                  n_dim    = 4) {
 
   #####################
   ## argument checks ##

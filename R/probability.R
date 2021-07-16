@@ -163,6 +163,8 @@ p_thirt <- function(gamma, items, persons) {
                     psisq2  = psisq[pair2, ])
     }
 
+    # TO HERE #
+
     # add probabilities of reverse response patterns
     # with pair names formatted for easier access
     names <- colnames(probability_pair[[block]])
@@ -259,7 +261,7 @@ p_thirt <- function(gamma, items, persons) {
 
           # step 1: multiply elements within each vector in den_list
           #         e.g. p(1 > 2) * p(1 > 3) and p(2 > 1) * p(2 > 3) and ...
-          step1 <- apply(as.matrix(probability_pair[[block]][ , den_list[[den]]]),
+          step1 <- apply(as.matrix(probability_pair[[block]][ , den_list[[den]], drop = FALSE]),
                          MARGIN = 1,
                          FUN = "prod")
 
@@ -270,7 +272,7 @@ p_thirt <- function(gamma, items, persons) {
 
         # step 3: multiply elements in num_list
         #         e.g. p(1 > 2) * p(1 > 3)
-        step3   <- apply(as.matrix(probability_pair[[block]][ , num_list]),
+        step3   <- apply(as.matrix(probability_pair[[block]][ , num_list, drop = FALSE]),
                          MARGIN = 1,
                          FUN = "prod")
 
@@ -282,8 +284,11 @@ p_thirt <- function(gamma, items, persons) {
         probability[ , resp] <- probability[ , resp] * step4
       } # END for probmaster LOOP
     } # END for resp LOOP
+
     probability_list[[block]] <- probability
+
   } # END for block LOOP
+
   return(probability_list)
 } # END p_thirt FUNCTION
 
