@@ -4,12 +4,12 @@
 \alias{simulate_thirt_params}
 \title{Simulate parameters}
 \usage{
-simulate_thirt_params(n_person = 1, n_item = 2, n_block = 1, n_dim = 2)
+simulate_thirt_params(n_person = 2, n_item = c(2, 4), n_block = 2, n_dim = 3)
 }
 \arguments{
 \item{n_person}{integer indicating the number of people}
 
-\item{n_item}{integer indicating the number of items per block}
+\item{n_item}{vector of length \verb{[n_block]} indicating the number of items for each block}
 
 \item{n_block}{integer indicating the number of blocks}
 
