@@ -24,13 +24,13 @@
 #' set.seed(202106)
 #'
 #' params <- simulate_thirt_params(n_person = 200,
-#'                                 n_item = 3,
-#'                                 n_block = 2,
-#'                                 n_dim = 3)
+#'                                 n_item   = 3,
+#'                                 n_block  = 2,
+#'                                 n_dim    = 3)
 #'
-#' prob <- do.call(p_thirt, params)
+#' prob   <- do.call(p_thirt, params)
 #'
-#' for(block in seq(length(prob))){
+#' for(block in seq_along(prob))){
 #'   print(summary(prob[[block]]))
 #' }
 #'

@@ -23,9 +23,11 @@ simulate_thirt_params <- function(n_person = 1,
     stop("n_person must be a number greater than 0")
   } # END n_person arg check
 
-  if (any(!is.numeric(n_item)) || any(n_item < 2) || length(n_item) != n_block) {
+  if (any(!is.numeric(n_item)) || any(n_item < 2) || (length(n_item) != 1 && length(n_item) != n_block)) {
     stop("n_item must be a vector of length n_block of integers greater than 1")
-  } # END n_item arg check
+  } else{
+    n_item <- rep_len(n_item, n_block)
+  }
 
   if (!is.numeric(n_block) || n_block < 1) {
     stop("n_block must be a number greater than 0")
@@ -43,52 +45,52 @@ simulate_thirt_params <- function(n_person = 1,
   block_size <- choose2(n_item)
 
   # empty list for pair names across all blocks
-  pairs <- c()
+  pairs      <- c()
+  n_item_0   <- c(0, n_item)
 
-  # pairs for first block
-  combo <- combn2(seq(from = 1, to = n_item[1]))
-  for (pair in seq_len(ncol(combo))) {
-    pairs <- append(pairs, paste0(combo[1, pair], "-", combo[2, pair]))
-  }
+  # combinations per block for all blocks
+  for (block in seq_len(n_block)) {
+    block_start <- 1 + n_item_0[block] * (block - 1)
+    block_items <- n_item_0[block + 1] - 1
+    combo       <- combn2(
+      seq(from = block_start,
+          to   = block_start + block_items)
+    )
 
-  # pairs for subsequent blocks
-  if (n_block > 1) {
-
-    # combinations per block for all subsequent blocks
-    for (block in seq(2, n_block)) {
-      combo <- combn2(seq(from = 1 + n_item[block - 1] * (block - 1),
-                         to   = 1 + n_item[block - 1] * (block - 1) + n_item[block] - 1))
-
-      # append all pair names to pairs vector
-      for (pair in seq(ncol(combo))){
-        pairs <- append(pairs, paste0(combo[1, pair], "-", combo[2, pair]))
-      } # END for pair LOOP
-    } # END for block LOOP
-  } # END if n_block > 1 STATEMENT
+    # append all pair names to pairs vector
+    for (pair in seq(ncol(combo))){
+      pairs <- append(pairs, paste0(combo[1, pair], "-", combo[2, pair]))
+    } # END for pair LOOP
+  } # END for block LOOP
 
   # data frame for gamma parameters for item pairs
   gamma   <- data.frame(
     pair  = pairs,
-    gamma = r_gamma_prior(n = sum(block_size)))
+    gamma = r_gamma_prior(n = sum(block_size))
+  )
 
   # data frame for item parameters
-  items  <- data.frame(
-    item   = seq(sum(n_item)),
-    block  = rep(seq(n_block), times = n_item),
-    dim    = seq(n_dim),
-    lambda = r_lambda_prior(n = sum(n_item)),
-    psisq  = r_psisq_prior(n  = sum(n_item)))
+  item_count <- sum(n_item)
+  item_dims  <- lapply(X   = n_item,
+                       FUN = sample,
+                       x   = n_dim)
 
-  # data frame for person parameters
-  persons <- data.frame(
-    person = seq(n_person))
-  for (dim in seq(n_dim)) {
-    persons[dim + 1] <- r_thetas_prior(n = n_person)
-  } # END for dim LOOP
-  names(persons)[2:(n_dim + 1)] <- paste0("theta_", seq(n_dim))
+  items  <- data.frame(
+    item   = seq_len(item_count),
+    block  = rep(seq_len(n_block), times = n_item),
+    dim    = unlist(item_dims),
+    lambda = r_lambda_prior(n = item_count),
+    psisq  = r_psisq_prior(n  = item_count)
+  )
+
+  # data frame for person parameters (correlations among persons??)
+  dim_cols                 <- 1 + seq_len(n_dim)
+  persons                  <- data.frame(person = seq_len(n_person))
+  persons[dim_cols]        <- r_thetas_prior(n = n_person * n_dim)
+  names(persons)[dim_cols] <- paste0("theta_", seq(n_dim))
 
   # return lists
-  return(list("gamma"   = gamma,
-              "items"   = items,
-              "persons" = persons))
+  list(gamma   = gamma,
+       items   = items,
+       persons = persons)
 } # END simulate_thirt_params FUNCTION
