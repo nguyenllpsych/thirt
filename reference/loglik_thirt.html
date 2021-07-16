@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Probability calculation — p_thirt • thirt</title>
+<title>Calculate log-likelihood — loglik_thirt • thirt</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Probability calculation — p_thirt" />
-<meta property="og:description" content="Calculate the probability of all potential response patterns for each respondent" />
+<meta property="og:title" content="Calculate log-likelihood — loglik_thirt" />
+<meta property="og:description" content="Calculate log-likelihood" />
 
 
 
@@ -111,16 +111,16 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Probability calculation</h1>
-    <small class="dont-index">Source: <a href='https://github.com/nguyenllpsych/thirt/blob/master/R/probability.R'><code>R/probability.R</code></a></small>
-    <div class="hidden name"><code>p_thirt.Rd</code></div>
+    <h1>Calculate log-likelihood</h1>
+    <small class="dont-index">Source: <a href='https://github.com/nguyenllpsych/thirt/blob/master/R/likelihood.R'><code>R/likelihood.R</code></a></small>
+    <div class="hidden name"><code>loglik_thirt.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>Calculate the probability of all potential response patterns for each respondent</p>
+    <p>Calculate log-likelihood</p>
     </div>
 
-    <pre class="usage"><span class='fu'>p_thirt</span><span class='op'>(</span><span class='va'>gamma</span>, <span class='va'>items</span>, <span class='va'>persons</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>loglik_thirt</span><span class='op'>(</span><span class='va'>gamma</span>, <span class='va'>items</span>, <span class='va'>persons</span>, <span class='va'>resp</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -147,27 +147,34 @@ variable <code>dim</code> for dimensions.</p></td>
 variable <code>person</code> of the format <code>p</code> for person number <code>p</code>,
 variables named <code>theta_d</code> for dimension number <code>d</code>.</p></td>
     </tr>
+    <tr>
+      <th>resp</th>
+      <td><p>a data.frame of length <code>[n_person x n_block]</code> with at least three first variables:
+variable <code>person</code> of the format <code>p</code> for person number <code>p</code>,
+variable <code>block</code> of the format <code>b</code> for block number <code>b</code>,
+variable <code>resp</code> of the format <code>r</code> for response number <code>r</code>
+which corresponds to mupp::find_permutation_index().</p></td>
+    </tr>
     </table>
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>a list of length <code>[block]</code> of matrices with dimension <code>[person X permutation]</code>
-of probabilities for each response pattern per block.</p>
+    <p>a matrix of dimensions <code>[n_person X n_block]</code> of log-likelihoods
+of chosen responses for each person for each block.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
+    <pre class="examples"><div class='input'>
+<span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
 <span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span><span class='op'>(</span><span class='fl'>202106</span><span class='op'>)</span>
 
-<span class='va'>params</span> <span class='op'>&lt;-</span> <span class='fu'><a href='simulate_thirt_params.html'>simulate_thirt_params</a></span><span class='op'>(</span>n_person <span class='op'>=</span> <span class='fl'>200</span>,
-                                n_item   <span class='op'>=</span> <span class='fl'>3</span>,
-                                n_block  <span class='op'>=</span> <span class='fl'>2</span>,
-                                n_dim    <span class='op'>=</span> <span class='fl'>3</span><span class='op'>)</span>
+<span class='va'>params</span>   <span class='op'>&lt;-</span> <span class='fu'><a href='simulate_thirt_params.html'>simulate_thirt_params</a></span><span class='op'>(</span><span class='op'>)</span>
 
-<span class='va'>prob</span>   <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/do.call.html'>do.call</a></span><span class='op'>(</span><span class='va'>p_thirt</span>, <span class='va'>params</span><span class='op'>)</span>
+<span class='va'>gamma</span>    <span class='op'>&lt;-</span> <span class='va'>params</span><span class='op'>$</span><span class='va'>gamma</span>
+<span class='va'>items</span>    <span class='op'>&lt;-</span> <span class='va'>params</span><span class='op'>$</span><span class='va'>items</span>
+<span class='va'>persons</span>  <span class='op'>&lt;-</span> <span class='va'>params</span><span class='op'>$</span><span class='va'>persons</span>
+<span class='va'>resp</span>     <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/do.call.html'>do.call</a></span><span class='op'>(</span><span class='va'>simulate_thirt_resp</span>, <span class='va'>params</span><span class='op'>)</span><span class='op'>$</span><span class='va'>resp</span>
 
-<span class='kw'>for</span><span class='op'>(</span><span class='va'>block</span> <span class='kw'>in</span> <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq_along</a></span><span class='op'>(</span><span class='va'>prob</span><span class='op'>)</span><span class='op'>)</span><span class='op'>{</span>
-  <span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>prob</span><span class='op'>[[</span><span class='va'>block</span><span class='op'>]</span><span class='op'>]</span><span class='op'>)</span><span class='op'>)</span>
-<span class='op'>}</span>
+<span class='fu'>loglik_thirt</span><span class='op'>(</span>gamma <span class='op'>=</span> <span class='va'>gamma</span>, items <span class='op'>=</span> <span class='va'>items</span>, persons <span class='op'>=</span> <span class='va'>persons</span>, resp <span class='op'>=</span> <span class='va'>resp</span><span class='op'>)</span>
 <span class='op'>}</span>
 
 </div></pre>
