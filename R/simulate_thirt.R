@@ -114,9 +114,10 @@ simulate_thirt_params <- function(n_person = 2,
 #'                variable `person` of the format `p` for person number `p`,
 #'                variables named `theta_d` for dimension number `d`.
 #'
-#' @return a list with (1) data.frame `items` indicating items, blocks, and dimensions and
-#'                     (2) data.frame `resp` indicating people, blocks, and response pattern.
-#'                     Response patterns are numbered and compatible with mupp::find_permutation_order()
+#' @return a list with:
+#'         (1) data.frame `items` indicating items, blocks, and dimensions and
+#'         (2) data.frame `resp` indicating people, blocks, response numbers, and response sequences.
+#'
 #'
 #' @examples
 #' \dontrun{
@@ -127,15 +128,11 @@ simulate_thirt_params <- function(n_person = 2,
 #' do.call(simulate_thirt_resp, params)
 #' }
 #'
+#' @importFrom mupp
+#'             find_permutation_order
+#'
 #' @export
 simulate_thirt_resp <- function(gamma, items, persons) {
-
-  # find probability of all possible response patterns given parameters
-  probs <- p_thirt(gamma, items, persons)
-
-  # simulate response patterns given the probabilities
-  # a list of length n_block with the index of response patterns per block
-  resp_ <- simulate_thirt_resp_(probs)
 
   # pull out names and characteristics of parameters
   item_name   <- names(items)[1]
@@ -144,6 +141,14 @@ simulate_thirt_resp <- function(gamma, items, persons) {
   person_name <- names(persons)[1]
   n_block     <- length(unique(items[ , block_name]))
   n_person    <- nrow(persons)
+  n_item      <- as.data.frame(table(items[block_name]))[ , 2]
+
+  # find probability of all possible response patterns given parameters
+  probs <- p_thirt(gamma, items, persons)
+
+  # simulate response patterns given the probabilities
+  # a list of length n_block with the index of response patterns per block
+  resp_ <- simulate_thirt_resp_(probs)
 
   # items object
   items       <- items[ , c(item_name, block_name, dim_name)]
@@ -153,6 +158,31 @@ simulate_thirt_resp <- function(gamma, items, persons) {
     person = rep(seq_len(n_person), times   = n_block),
     block  = rep(seq_len(n_block),  each    = n_person),
     resp   = unlist(resp_))
+
+  # response sequence corresponding to response pattern number
+  seq <- list()
+  for (row in seq_len(nrow(resp))) {
+
+    # pull out block number
+    block    <- resp[row, 'block']
+
+    # find order for each response pattern number
+    seq[row] <- list(find_permutation_order(
+      init  = ifelse(
+        # for first block, init = 1
+        block == 1, 1,
+
+        # for subsequent block, init =
+        1 + n_item[block - 1] * (block - 1)),
+
+      # number of items in block
+      n     = n_item[block],
+
+      # index is the response pattern number
+      index = resp[row, 'resp']))
+  }
+  # append to end of resp object
+  resp$seq    <- seq
 
   # return
   return(list(items = items,

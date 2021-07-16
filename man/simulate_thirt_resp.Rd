@@ -24,9 +24,9 @@ variable \code{person} of the format \code{p} for person number \code{p},
 variables named \code{theta_d} for dimension number \code{d}.}
 }
 \value{
-a list with (1) data.frame \code{items} indicating items, blocks, and dimensions and
-(2) data.frame \code{resp} indicating people, blocks, and response pattern.
-Response patterns are numbered and compatible with mupp::find_permutation_order()
+a list with:
+(1) data.frame \code{items} indicating items, blocks, and dimensions and
+(2) data.frame \code{resp} indicating people, blocks, response numbers, and response sequences.
 }
 \description{
 Generate responses that can be used for the Thurstonian IRT model.
