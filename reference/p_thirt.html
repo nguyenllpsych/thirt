@@ -151,21 +151,23 @@ variables named <code>theta_d</code> for dimension number <code>d</code>.</p></t
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>a list of length <code>[block]</code> of data frames with dimension <code>[person X permutation]</code>
-of probability for each response pattern per block</p>
+    <p>a list of length <code>[block]</code> of matrices with dimension <code>[person X permutation]</code>
+of probabilities for each response pattern per block</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
 <span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span><span class='op'>(</span><span class='fl'>202106</span><span class='op'>)</span>
 
 <span class='va'>params</span> <span class='op'>&lt;-</span> <span class='fu'><a href='simulate_thirt_params.html'>simulate_thirt_params</a></span><span class='op'>(</span>n_person <span class='op'>=</span> <span class='fl'>200</span>,
-                                n_item <span class='op'>=</span> <span class='fl'>3</span>,
-                                n_block <span class='op'>=</span> <span class='fl'>2</span>,
-                                n_dim <span class='op'>=</span> <span class='fl'>3</span><span class='op'>)</span>
+                                n_item   <span class='op'>=</span> <span class='fl'>3</span>,
+                                n_block  <span class='op'>=</span> <span class='fl'>2</span>,
+                                n_dim    <span class='op'>=</span> <span class='fl'>3</span><span class='op'>)</span>
 
-<span class='va'>prob</span> <span class='op'>&lt;-</span> <span class='fu'>p_thirt</span><span class='op'>(</span><span class='va'>params</span><span class='op'>$</span><span class='va'>gamma</span>, <span class='va'>params</span><span class='op'>$</span><span class='va'>items</span>, <span class='va'>params</span><span class='op'>$</span><span class='va'>persons</span><span class='op'>)</span>
+<span class='va'>prob</span>   <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/do.call.html'>do.call</a></span><span class='op'>(</span><span class='va'>p_thirt</span>, <span class='va'>params</span><span class='op'>)</span>
 
-<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>prob</span><span class='op'>)</span>
+<span class='kw'>for</span><span class='op'>(</span><span class='va'>block</span> <span class='kw'>in</span> <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq_along</a></span><span class='op'>(</span><span class='va'>prob</span><span class='op'>)</span><span class='op'>)</span><span class='op'>{</span>
+  <span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>prob</span><span class='op'>[[</span><span class='va'>block</span><span class='op'>]</span><span class='op'>]</span><span class='op'>)</span><span class='op'>)</span>
+<span class='op'>}</span>
 <span class='op'>}</span>
 
 </div></pre>
