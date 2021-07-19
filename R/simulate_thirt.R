@@ -167,20 +167,13 @@ simulate_thirt_resp <- function(gamma, items, persons) {
     block    <- resp[row, 'block']
 
     # find order for each response pattern number
-    seq[row] <- list(find_permutation_order(
-      init  = ifelse(
-        # for first block, init = 1
-        block == 1, 1,
-
-        # for subsequent block, init =
-        1 + n_item[block - 1] * (block - 1)),
-
-      # number of items in block
-      n     = n_item[block],
-
-      # index is the response pattern number
-      index = resp[row, 'resp']))
+    seq[row] <- list(
+      find_permutation_order(n     = n_item[block],
+                             init  = 1,
+                             index = resp[row, 'resp'])
+    )
   }
+
   # append to end of resp object
   resp$seq    <- seq
 
