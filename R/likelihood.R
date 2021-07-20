@@ -37,6 +37,9 @@
 #' loglik_thirt(gamma = gamma, items = items, persons = persons, resp = resp)
 #' }
 #'
+#' @importFrom reshape2
+#'             dcast
+#'
 #' @export
 loglik_thirt <- function(gamma, items, persons, resp) {
 
@@ -47,21 +50,25 @@ loglik_thirt <- function(gamma, items, persons, resp) {
   # calculate all probabilities
   probs     <- p_thirt(gamma = gamma, items = items, persons = persons)
 
+  # resp to wide data.frame of dimension [n_person X n_block]
+  resp_wide <- dcast(resp, person ~ block, value.var = "resp")[-1]
+
   # extract probabilities for selected responses
   loglik    <- matrix(nrow = n_person,
                       ncol = n_block)
-  for(person in seq_len(n_person)) {
-    for (block in seq_len(n_block)) {
-      # extract response number for each person in each block
-      r     <- resp[which(resp$person == person & resp$block == block), 'resp']
+  for (block in seq_len(n_block)) {
+    # extract response number for each person in each block
+    r       <- resp_wide[, block]
 
-      # extract associated probability
-      p     <- probs[[block]][person, r]
+    # combine person and resp indices
+    idx   <- cbind(seq_len(n_person), r)
 
-      # take the log
-      loglik[person, block] <- log(p)
-    }
-  }
+    # extract associated probability
+    p     <- probs[[block]][idx]
+
+    # take the log
+    loglik[, block] <- log(p)
+  } # END for block LOOP
 
   return(loglik)
 }
