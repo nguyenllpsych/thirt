@@ -11,7 +11,7 @@ loglik_thirt(gamma, items, persons, resp)
 variable \code{pair} of the format \code{i-j} for item pair \code{ij},
 variable \code{gamma} for threshold parameters.}
 
-\item{items}{a data.frame of length \link{total items} with five variables:
+\item{items}{a data.frame of length \verb{[total items]} with five variables:
 variable \code{item} of the format \code{i} for item number \code{i},
 variable \code{block} of the format \code{b} for block number \code{b},
 variable \code{dim} of the format \code{d} for dimension number \code{d},

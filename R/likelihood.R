@@ -3,7 +3,7 @@
 #' @param gamma a data.frame of length `[total binary outcomes]` with two variables:
 #'              variable `pair` of the format `i-j` for item pair `ij`,
 #'              variable `gamma` for threshold parameters.
-#' @param items a data.frame of length [total items] with five variables:
+#' @param items a data.frame of length `[total items]` with five variables:
 #'              variable `item` of the format `i` for item number `i`,
 #'              variable `block` of the format `b` for block number `b`,
 #'              variable `dim` of the format `d` for dimension number `d`,
