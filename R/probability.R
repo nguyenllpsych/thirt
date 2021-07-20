@@ -73,7 +73,13 @@ p_thirt <- function(gamma, items, persons) {
     # create permutation list for each block
     permutation_block <- as.data.frame(
       find_all_permutations(n    = n_item[block],
-                            init = 1)
+                            init = ifelse(
+                              # for first block, init = 1
+                              # TO DO: all blocks init at 1
+                              block == 1, 1,
+
+                              # for subsequent block, init =
+                              1 + n_item[block - 1] * (block - 1)))
     )
 
     # id variable to identify each response pattern in a block

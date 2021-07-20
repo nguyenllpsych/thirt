@@ -50,6 +50,7 @@ simulate_thirt_params <- function(n_person = 2,
 
   # combinations per block for all blocks
   for (block in seq_len(n_block)) {
+    # TO DO: all blocks init at 1
     block_start <- 1 + n_item_0[block] * (block - 1)
     block_items <- n_item_0[block + 1] - 1
     combo       <- combn2(
@@ -167,11 +168,20 @@ simulate_thirt_resp <- function(gamma, items, persons) {
     block    <- resp[row, 'block']
 
     # find order for each response pattern number
-    seq[row] <- list(
-      find_permutation_order(n     = n_item[block],
-                             init  = 1,
-                             index = resp[row, 'resp'])
-    )
+    seq[row] <- list(find_permutation_order(
+      init  = ifelse(
+        # for first block, init = 1
+        # TO DO: all blocks init at 1
+        block == 1, 1,
+
+        # for subsequent block, init =
+        1 + n_item[block - 1] * (block - 1)),
+
+      # number of items in block
+      n     = n_item[block],
+
+      # index is the response pattern number
+      index = resp[row, 'resp']))
   }
 
   # append to end of resp object
