@@ -27,7 +27,8 @@ Imports:
     magrittr (>= 1.5),
     Rcpp,
     mupp,
-    truncnorm
+    truncnorm,
+    reshape2
 Suggests:
     covr,
     knitr (>= 1.20),
