@@ -44,18 +44,18 @@ simulate_thirt_params <- function(n_person = 2,
   # block size - number of pairs per block
   block_size <- choose2(n_item)
 
-  # empty list for pair names across all blocks
+  # empty list for pair names and item names across all blocks
   pairs      <- c()
+  item_list  <- c()
   n_item_0   <- c(0, n_item)
 
   # combinations per block for all blocks
   for (block in seq_len(n_block)) {
-    # TO DO: all blocks init at 1
-    block_start <- 1 + n_item_0[block] * (block - 1)
-    block_items <- n_item_0[block + 1] - 1
+    block_start <- 1
+    block_end   <- n_item_0[block + 1]
     combo       <- combn2(
       seq(from = block_start,
-          to   = block_start + block_items)
+          to   = block_end)
     )
 
     # append all pair names to pairs vector
@@ -67,6 +67,7 @@ simulate_thirt_params <- function(n_person = 2,
   # data frame for gamma parameters for item pairs
   gamma   <- data.frame(
     pair  = pairs,
+    block = rep(seq_len(n_block), times = block_size),
     gamma = r_gamma_prior(n = sum(block_size))
   )
 
@@ -75,9 +76,11 @@ simulate_thirt_params <- function(n_person = 2,
   item_dims  <- lapply(X   = n_item,
                        FUN = sample,
                        x   = n_dim)
-
+  for (block in seq_len(n_block)){
+    item_list <- append(item_list, (seq_len(n_item_0[-1][block])))
+  } # END for block LOOP to create total item list init at 1 for each block
   items  <- data.frame(
-    item   = seq_len(item_count),
+    item   = item_list,
     block  = rep(seq_len(n_block), times = n_item),
     dim    = unlist(item_dims),
     lambda = r_lambda_prior(n = item_count),
@@ -169,13 +172,7 @@ simulate_thirt_resp <- function(gamma, items, persons) {
 
     # find order for each response pattern number
     seq[row] <- list(find_permutation_order(
-      init  = ifelse(
-        # for first block, init = 1
-        # TO DO: all blocks init at 1
-        block == 1, 1,
-
-        # for subsequent block, init =
-        1 + n_item[block - 1] * (block - 1)),
+      init  = 1,
 
       # number of items in block
       n     = n_item[block],

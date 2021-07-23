@@ -52,9 +52,12 @@ p_thirt <- function(gamma, items, persons) {
   n_item   <- as.data.frame(table(items$block))[ , 2]
 
   # item parameters as individual data frames
-  lambda   <- data.frame(lambda = items$lambda)
-  psisq    <- data.frame(psisq  = items$psisq)
+  lambda   <- data.frame(block  = items$block,
+                         lambda = items$lambda)
+  psisq    <- data.frame(block  = items$block,
+                         psisq  = items$psisq)
   dict     <- data.frame(item   = items$item,
+                         block  = items$block,
                          dim    = items$dim)
 
   # person parameters with only thetas
@@ -73,13 +76,7 @@ p_thirt <- function(gamma, items, persons) {
     # create permutation list for each block
     permutation_block <- as.data.frame(
       find_all_permutations(n    = n_item[block],
-                            init = ifelse(
-                              # for first block, init = 1
-                              # TO DO: all blocks init at 1
-                              block == 1, 1,
-
-                              # for subsequent block, init =
-                              1 + n_item[block - 1] * (block - 1)))
+                            init = 1)
     )
 
     # id variable to identify each response pattern in a block
@@ -132,7 +129,8 @@ p_thirt <- function(gamma, items, persons) {
       lambda    = list(lambda),
       theta     = list(theta),
       psisq     = list(psisq),
-      dict      = list(dict))
+      dict      = list(dict),
+      block     = c(seq_len(n_block)))
 } # END p_thirt FUNCTION
 
 ######################
@@ -147,7 +145,8 @@ p_thirt_block <- function(perm_list,
                           lambda,
                           theta,
                           psisq,
-                          dict){
+                          dict,
+                          block){
 
   # create an empty matrix of size [person X block_size]
   perms               <- tail(perm_list, c(0, -(n_item + 1)))
@@ -160,22 +159,23 @@ p_thirt_block <- function(perm_list,
   for (pair in colnames(prob_pair)) {
 
     # index everything
-    pair1     <- split_pair(pair, 1)
-    pair2     <- split_pair(pair, 2)
+    pair1     <- as.numeric(split_pair(pair, 1))
+    pair2     <- as.numeric(split_pair(pair, 2))
 
-    gamma_idx <- gamma$pair == pair
-    dim1      <- dict[dict$item == pair1, ]$dim
-    dim2      <- dict[dict$item == pair2, ]$dim
+    gamma_idx <- gamma$pair == pair & gamma$block == block
+    items_idx <- lambda$block == block
+    dim1      <- dict[dict$item == pair1 & dict$block == block, ]$dim
+    dim2      <- dict[dict$item == pair2 & dict$block == block, ]$dim
 
     # p_thirt_one calculations
     prob_pair[ , pair] <-
       p_thirt_one(gamma   = gamma[gamma_idx, ]$gamma,
-                  lambda1 = lambda[pair1, ],
-                  lambda2 = lambda[pair2, ],
+                  lambda1 = lambda[items_idx, ][pair1, "lambda"],
+                  lambda2 = lambda[items_idx, ][pair2, "lambda"],
                   theta1  = theta[ , dim1],
                   theta2  = theta[ , dim2],
-                  psisq1  = psisq[pair1, ],
-                  psisq2  = psisq[pair2, ])
+                  psisq1  = psisq[items_idx, ][pair1, "psisq"],
+                  psisq2  = psisq[items_idx, ][pair1, "psisq"])
   }
 
   # add probabilities of reverse response patterns
