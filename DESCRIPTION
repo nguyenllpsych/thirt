@@ -28,7 +28,8 @@ Imports:
     Rcpp,
     mupp,
     truncnorm,
-    reshape2
+    reshape2,
+    tibble (>= 3.1)
 Suggests:
     covr,
     knitr (>= 1.20),
