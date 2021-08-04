@@ -7,20 +7,68 @@
 estimate_thirt_params_mcmc(
   resp,
   items,
-  control,
+  control = list(),
   initial_params = NULL,
   fixed_params = NULL
 )
 }
 \arguments{
-\item{fixed_params}{}
+\item{resp}{a data.frame of length \verb{[n_person x n_block]} with at least three first variables:
+variable \code{person} of the format \code{p} for person number \code{p},
+variable \code{block} of the format \code{b} for block number \code{b},
+variable \code{resp} of the format \code{r} for response number \code{r}
+which corresponds to mupp::find_permutation_index().}
+
+\item{items}{a data.frame of length \verb{[total items]} with five variables:
+variable \code{item} of the format \code{i} for item number \code{i},
+variable \code{block} of the format \code{b} for block number \code{b},
+variable \code{dim} of the format \code{d} for dimension number \code{d},
+variable \code{lambda} for loadings,
+variable \code{psisq} for uniqueness,
+variable \code{dim} for dimensions.}
+
+\item{control}{a list of three parameters to control the MCMC algorithm:
+\code{n_iter} for the number of iterations,
+\code{n_burnin} for the number of burn-ins,
+\code{step_size_sd} for the step size of new parameter generation.}
+
+\item{initial_params}{a list of initial parameters to start the algorithm.}
+
+\item{fixed_params}{a list of fixed parameters to be excluded from estimation.}
 }
 \value{
-
+a list of three objects:
+\code{all_iters} is a list of length \verb{[n_iter]} for parameter estimates for all iterations,
+\code{mean_mcmc} is a list of length \link{4} for mean of four parameters after burn-ins,
+\code{sd_mcmc} is a list of length \link{4} for SD of four parameters after burn-ins.
 }
 \description{
 Estimate parameters with MCMC
 }
 \examples{
+\dontrun{
+set.seed(202108)
+
+# simulate parameters
+params <- simulate_thirt_params(n_person = 5)
+resp   <- do.call(simulate_thirt_resp, params)
+gamma  <- params$gamma$gamma
+lambda <- params$items$lambda
+psisq  <- params$items$psisq
+theta  <- params$persons[, -1]
+
+# estimation output
+output <- estimate_thirt_params_mcmc(resp  = resp$resp,
+                                     items = resp$items,
+                                     control = list(n_iter = 5000,
+                                                    n_burnin = 200,
+                                                    step_size_sd = 0.1))
+
+# correlate estimated and true parameters
+diag(cor(theta, output$mean_mcmc$theta))
+cor(gamma, output$mean_mcmc$gamma)
+cor(lambda, output$mean_mcmc$lambda)
+cor(psisq,   output$mean_mcmc$psisq)
+}
 
 }
