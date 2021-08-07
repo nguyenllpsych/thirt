@@ -466,6 +466,7 @@ update_with_metrop <- function(loglik_old, loglik_new,
 
   # acceptance probability
   A <- exp(loglik_new + prior_new) / exp(loglik_old + prior_old)
+  A[is.na(A)] <- 0
 
   # random number gen
   U <- runif(n = length(A))
