@@ -18,8 +18,8 @@ d_thetas_prior <- function(x, ...) {
 
 #' @rdname prior
 #' @export
-d_lambda_prior <- function(x, ...) {
-  dtruncnorm(x, a = -1, b = 1, ...)
+d_lambda_prior <- function(x, direction = 1, ...) {
+  dtruncnorm(direction * x, a = 0, b = 1.2, ...)
 }
 
 #' @rdname prior
@@ -44,7 +44,7 @@ r_thetas_prior <- function(n, ...) {
 #' @rdname prior
 #' @export
 r_lambda_prior <- function(n, ...) {
-  rtruncnorm(n, a = -1, b = 1, ...)
+  rtruncnorm(n, a = 0, b = 1.2, ...)
 }
 
 #' @rdname prior

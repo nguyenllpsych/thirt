@@ -3,7 +3,8 @@
 #' Generate parameters that conform to the Thurstonian IRT model.
 #'
 #' @param n_person integer indicating the number of people
-#' @param n_item vector of length `[n_block]` indicating the number of items for each block
+#' @param n_item integer or vector of length `[n_block]` indicating the number of items for each block
+#' @param n_neg integer or vector of length `[n_block]` indicating the number of negatively-keyed items for each block
 #' @param n_block integer indicating the number of blocks
 #' @param n_dim integer indicating the number of dimensions or traits
 #'
@@ -12,6 +13,7 @@
 #' @export
 simulate_thirt_params <- function(n_person = 2,
                                   n_item   = c(2, 4),
+                                  n_neg    = 1,
                                   n_block  = 2,
                                   n_dim    = 4) {
 
@@ -29,6 +31,13 @@ simulate_thirt_params <- function(n_person = 2,
     n_item <- rep_len(n_item, n_block)
   }
 
+  if (any(!is.numeric(n_neg)) || any(n_neg < 0)|| (length(n_neg) != 1 && length(n_neg) != n_block)) {
+    stop("n_neg must be a vector of length n_block of integers greater than or equal to 0")
+  } else{
+    n_neg <- rep_len(n_neg, n_block)
+    n_pos <- n_item - n_neg
+  }
+
   if (!is.numeric(n_block) || n_block < 1) {
     stop("n_block must be a number greater than 0")
   } # END n_block arg check
@@ -44,15 +53,15 @@ simulate_thirt_params <- function(n_person = 2,
   # block size - number of pairs per block
   block_size <- choose2(n_item)
 
-  # empty list for pair names and item names across all blocks
+  # empty list for pair names, item names, and item directions across all blocks
   pairs      <- c()
   item_list  <- c()
-  n_item_0   <- c(0, n_item)
+  item_dir   <- c()
 
   # combinations per block for all blocks
   for (block in seq_len(n_block)) {
     block_start <- 1
-    block_end   <- n_item_0[block + 1]
+    block_end   <- n_item[block]
     combo       <- combn2(
       seq(from = block_start,
           to   = block_end)
@@ -77,13 +86,18 @@ simulate_thirt_params <- function(n_person = 2,
                        FUN = sample,
                        x   = n_dim)
   for (block in seq_len(n_block)){
-    item_list <- append(item_list, (seq_len(n_item_0[-1][block])))
+    item_list <- append(item_list, (seq_len(n_item[block])))
+    item_dir  <- append(item_dir, sample(c(
+      # positive items random within block
+      rep(1,   times = n_pos[block]),
+      # negative items random within block
+      rep(-1 , times = n_neg[block]))))
   } # END for block LOOP to create total item list init at 1 for each block
   items  <- data.frame(
     item   = item_list,
     block  = rep(seq_len(n_block), times = n_item),
     dim    = unlist(item_dims),
-    lambda = r_lambda_prior(n = item_count),
+    lambda = item_dir * r_lambda_prior(n = item_count),
     psisq  = r_psisq_prior(n  = item_count)
   )
 
@@ -139,6 +153,7 @@ simulate_thirt_params <- function(n_person = 2,
 simulate_thirt_resp <- function(gamma, items, persons) {
 
   # pull out names and characteristics of parameters
+  lambda      <- items$lambda
   item_name   <- names(items)[1]
   block_name  <- names(items)[2]
   dim_name    <- names(items)[3]
@@ -156,6 +171,7 @@ simulate_thirt_resp <- function(gamma, items, persons) {
 
   # items object
   items       <- items[ , c(item_name, block_name, dim_name)]
+  items$key   <- sign(lambda)
 
   # resp object
   resp        <- data.frame(

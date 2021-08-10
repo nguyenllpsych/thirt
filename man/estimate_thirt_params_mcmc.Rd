@@ -23,9 +23,7 @@ which corresponds to mupp::find_permutation_index().}
 variable \code{item} of the format \code{i} for item number \code{i},
 variable \code{block} of the format \code{b} for block number \code{b},
 variable \code{dim} of the format \code{d} for dimension number \code{d},
-variable \code{lambda} for loadings,
-variable \code{psisq} for uniqueness,
-variable \code{dim} for dimensions.}
+variable \code{key} with -1 for negatively- and 1 for positively-keyed items.}
 
 \item{control}{a list of three parameters to control the MCMC algorithm:
 \code{n_iter} for the number of iterations,

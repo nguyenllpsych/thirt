@@ -14,7 +14,7 @@
 \usage{
 d_thetas_prior(x, ...)
 
-d_lambda_prior(x, ...)
+d_lambda_prior(x, direction = 1, ...)
 
 d_psisq_prior(x, ...)
 

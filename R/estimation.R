@@ -9,9 +9,7 @@
 #'              variable `item` of the format `i` for item number `i`,
 #'              variable `block` of the format `b` for block number `b`,
 #'              variable `dim` of the format `d` for dimension number `d`,
-#'              variable `lambda` for loadings,
-#'              variable `psisq` for uniqueness,
-#'              variable `dim` for dimensions.
+#'              variable `key` with -1 for negatively- and 1 for positively-keyed items.
 #' @param control a list of three parameters to control the MCMC algorithm:
 #'                `n_iter` for the number of iterations,
 #'                `n_burnin` for the number of burn-ins,
@@ -74,7 +72,8 @@ estimate_thirt_params_mcmc <- function(resp,
            block_size = block_size,
            n_block    = n_block,
            n_person   = n_person,
-           n_dim      = n_dim),
+           n_dim      = n_dim,
+           key        = items$key),
          envir = mcmc_envir)
 
   # default controls
@@ -183,7 +182,7 @@ estimate_thirt_params_mcmc_one <- function(envir,
       do.call(what = update_fun_one,
               args = list(x))
     }
-
+s
     # returns new environment
     envir <- update_fun(x = envir)
   } # END for params LOOP
@@ -226,10 +225,6 @@ update_thirt_params_mcmc <- function(envir,
   # update params in arguments to calculate log-likelihood
   envir$arguments[[params_name]] <- params_new
 
-  # pull out prior functions
-  d_fun_one <- paste0("d_", params_name, "_prior")
-  d_fun     <- function(x) do.call(what = d_fun_one, args = list(x))
-
   # calculate old and new log-likelihoods for each block
   logliks       <- list(old   = envir$loglik,
                         new   = do.call(loglik_thirt_mcmc,
@@ -238,7 +233,7 @@ update_thirt_params_mcmc <- function(envir,
   logliks_items <- lapply(X   = logliks,
                           FUN = function(x) colSums(x, na.rm = T))
 
-  # calculate old and new priors per block
+  # block index
   if (params_name == "gamma") {
     # gamma: block index for number of pairs per block
     block_index   <- rep(seq(length(envir$design$block_size)),
@@ -247,16 +242,36 @@ update_thirt_params_mcmc <- function(envir,
     # other params: block index for number of items per block
     block_index   <- envir$arguments$items$block
   } # END block_index if else STATEMENT
-  priors_items  <- lapply(X   = list(old = params_old,
-                                     new = params_new),
-                          FUN = function(x) {
-                            tapply(X     = x,
-                                   INDEX = block_index,
-                                   FUN   = function(x) {
-                                     sum(log(d_fun(x)),
-                                         na.rm = T)
-                                   }) # END tapply
-  }) # END priors_items lapply
+
+  # pull out prior functions
+  d_fun_one <- paste0("d_", params_name, "_prior")
+  d_fun     <- function(x) do.call(what = d_fun_one, args = list(x))
+
+  # calculate old and new priors per block
+  if (params_name == "lambda") {
+    priors_items <- lapply(X   = list(old = params_old,
+                                      new = params_new),
+                           FUN = function(x) {
+                             priors <- d_lambda_prior(x = x, direction = envir$design$key)
+                             tapply(X     = x,
+                                    INDEX = block_index,
+                                    FUN   = function(x) {
+                                      sum(log(x = priors), na.rm = T)
+                                    }) # END tapply
+                           }) # END priors_items lapply
+
+  } else {
+    priors_items <- lapply(X   = list(old = params_old,
+                                      new = params_new),
+                           FUN = function(x) {
+                             tapply(X     = x,
+                                    INDEX = block_index,
+                                    FUN   = function(x) {
+                                      sum(log(d_fun(x)),
+                                          na.rm = T)
+                                    }) # END tapply
+                           }) # END priors_items lapply
+  }
 
   # accept and update new parameters or not
   block_new <- update_with_metrop(loglik_new = logliks_items$new,
@@ -424,9 +439,8 @@ initialize_thirt_params <- function(resp, items,
   gamma <- matrix(0,
                   nrow = sum(design$block_size)) # all pairs across blocks
 
-  # lambda start at 1 or -1
-  lambda <- matrix(sample(c(-1, 1), size = sum(design$n_item), replace = T),
-                   nrow = sum(design$n_item))
+  # lambda start at 1 or -1 depending on item keys
+  lambda <- matrix(design$key)
 
   # psisq start at 1
   psisq  <- matrix(1,
