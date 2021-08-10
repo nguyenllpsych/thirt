@@ -124,8 +124,8 @@
   <span class='va'>resp</span>,
   <span class='va'>items</span>,
   control <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>,
-  initial_params <span class='op'>=</span> <span class='cn'>NULL</span>,
-  fixed_params <span class='op'>=</span> <span class='cn'>NULL</span>
+  initial_params <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>,
+  fixed_params <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span><span class='op'>)</span>
 <span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
@@ -156,11 +156,13 @@ variable <code>key</code> with -1 for negatively- and 1 for positively-keyed ite
     </tr>
     <tr>
       <th>initial_params</th>
-      <td><p>a list of initial parameters to start the algorithm.</p></td>
+      <td><p>a list of initial parameters to start the algorithm,
+each parameter needs to be a matrix.</p></td>
     </tr>
     <tr>
       <th>fixed_params</th>
-      <td><p>a list of fixed parameters to be excluded from estimation.</p></td>
+      <td><p>a list of fixed parameters to be excluded from estimation,
+each parameter needs to be a matrix.</p></td>
     </tr>
     </table>
 
@@ -175,8 +177,22 @@ variable <code>key</code> with -1 for negatively- and 1 for positively-keyed ite
     <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
 <span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span><span class='op'>(</span><span class='fl'>202108</span><span class='op'>)</span>
 
+<span class='co'># designs</span>
+<span class='va'>n_person</span>      <span class='op'>&lt;-</span> <span class='fl'>100</span>
+<span class='va'>n_item</span>        <span class='op'>&lt;-</span> <span class='fl'>4</span>
+<span class='va'>n_neg</span>         <span class='op'>&lt;-</span> <span class='fl'>2</span>
+<span class='va'>n_block</span>       <span class='op'>&lt;-</span> <span class='fl'>4</span>
+<span class='va'>n_dim</span>         <span class='op'>&lt;-</span> <span class='fl'>4</span>
+<span class='va'>n_iter</span>        <span class='op'>&lt;-</span> <span class='fl'>5000</span>
+<span class='va'>n_burnin</span>      <span class='op'>&lt;-</span> <span class='fl'>200</span>
+<span class='va'>step_size_sd</span>  <span class='op'>&lt;-</span> <span class='fl'>0.1</span>
+
 <span class='co'># simulate parameters</span>
-<span class='va'>params</span> <span class='op'>&lt;-</span> <span class='fu'><a href='simulate_thirt_params.html'>simulate_thirt_params</a></span><span class='op'>(</span>n_person <span class='op'>=</span> <span class='fl'>5</span><span class='op'>)</span>
+<span class='va'>params</span> <span class='op'>&lt;-</span> <span class='fu'><a href='simulate_thirt_params.html'>simulate_thirt_params</a></span><span class='op'>(</span>n_person <span class='op'>=</span> <span class='va'>n_person</span>,
+                                n_item   <span class='op'>=</span> <span class='va'>n_item</span>,
+                                n_neg    <span class='op'>=</span> <span class='va'>n_neg</span>,
+                                n_block  <span class='op'>=</span> <span class='va'>n_block</span>,
+                                n_dim    <span class='op'>=</span> <span class='va'>n_dim</span><span class='op'>)</span>
 <span class='va'>resp</span>   <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/do.call.html'>do.call</a></span><span class='op'>(</span><span class='va'>simulate_thirt_resp</span>, <span class='va'>params</span><span class='op'>)</span>
 <span class='va'>gamma</span>  <span class='op'>&lt;-</span> <span class='va'>params</span><span class='op'>$</span><span class='va'>gamma</span><span class='op'>$</span><span class='va'>gamma</span>
 <span class='va'>lambda</span> <span class='op'>&lt;-</span> <span class='va'>params</span><span class='op'>$</span><span class='va'>items</span><span class='op'>$</span><span class='va'>lambda</span>
@@ -184,17 +200,22 @@ variable <code>key</code> with -1 for negatively- and 1 for positively-keyed ite
 <span class='va'>theta</span>  <span class='op'>&lt;-</span> <span class='va'>params</span><span class='op'>$</span><span class='va'>persons</span><span class='op'>[</span>, <span class='op'>-</span><span class='fl'>1</span><span class='op'>]</span>
 
 <span class='co'># estimation output</span>
-<span class='va'>output</span> <span class='op'>&lt;-</span> <span class='fu'>estimate_thirt_params_mcmc</span><span class='op'>(</span>resp  <span class='op'>=</span> <span class='va'>resp</span><span class='op'>$</span><span class='va'>resp</span>,
-                                     items <span class='op'>=</span> <span class='va'>resp</span><span class='op'>$</span><span class='va'>items</span>,
-                                     control <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span>n_iter <span class='op'>=</span> <span class='fl'>5000</span>,
-                                                    n_burnin <span class='op'>=</span> <span class='fl'>200</span>,
-                                                    step_size_sd <span class='op'>=</span> <span class='fl'>0.1</span><span class='op'>)</span><span class='op'>)</span>
-
+<span class='va'>start_mcmc</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/Sys.time.html'>Sys.time</a></span><span class='op'>(</span><span class='op'>)</span>
+<span class='va'>output</span>     <span class='op'>&lt;-</span> <span class='fu'>estimate_thirt_params_mcmc</span><span class='op'>(</span>resp  <span class='op'>=</span> <span class='va'>resp</span><span class='op'>$</span><span class='va'>resp</span>,
+                                         items <span class='op'>=</span> <span class='va'>resp</span><span class='op'>$</span><span class='va'>items</span>,
+                                         control <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span>n_iter   <span class='op'>=</span> <span class='va'>n_iter</span>,
+                                                        n_burnin <span class='op'>=</span> <span class='va'>n_burnin</span>,
+                                                        step_size_sd <span class='op'>=</span> <span class='va'>step_size_sd</span><span class='op'>)</span>,
+                                         fixed_params <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span><span class='op'>(</span>psisq <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/matrix.html'>matrix</a></span><span class='op'>(</span><span class='va'>psisq</span><span class='op'>)</span><span class='op'>)</span>
+<span class='op'>)</span>
+<span class='va'>end_mcmc</span>   <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/Sys.time.html'>Sys.time</a></span><span class='op'>(</span><span class='op'>)</span>
+<span class='co'>#'</span>
 <span class='co'># correlate estimated and true parameters</span>
 <span class='fu'><a href='https://rdrr.io/r/base/diag.html'>diag</a></span><span class='op'>(</span><span class='fu'><a href='https://rdrr.io/r/stats/cor.html'>cor</a></span><span class='op'>(</span><span class='va'>theta</span>, <span class='va'>output</span><span class='op'>$</span><span class='va'>mean_mcmc</span><span class='op'>$</span><span class='va'>theta</span><span class='op'>)</span><span class='op'>)</span>
 <span class='fu'><a href='https://rdrr.io/r/stats/cor.html'>cor</a></span><span class='op'>(</span><span class='va'>gamma</span>, <span class='va'>output</span><span class='op'>$</span><span class='va'>mean_mcmc</span><span class='op'>$</span><span class='va'>gamma</span><span class='op'>)</span>
 <span class='fu'><a href='https://rdrr.io/r/stats/cor.html'>cor</a></span><span class='op'>(</span><span class='va'>lambda</span>, <span class='va'>output</span><span class='op'>$</span><span class='va'>mean_mcmc</span><span class='op'>$</span><span class='va'>lambda</span><span class='op'>)</span>
-<span class='fu'><a href='https://rdrr.io/r/stats/cor.html'>cor</a></span><span class='op'>(</span><span class='va'>psisq</span>,   <span class='va'>output</span><span class='op'>$</span><span class='va'>mean_mcmc</span><span class='op'>$</span><span class='va'>psisq</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/stats/cor.html'>cor</a></span><span class='op'>(</span><span class='va'>psisq</span>, <span class='va'>output</span><span class='op'>$</span><span class='va'>mean_mcmc</span><span class='op'>$</span><span class='va'>psisq</span><span class='op'>)</span>
+<span class='op'>(</span><span class='va'>time_mcmc</span> <span class='op'>&lt;-</span> <span class='va'>end_mcmc</span> <span class='op'>-</span> <span class='va'>start_mcmc</span><span class='op'>)</span>
 <span class='op'>}</span>
 
 </div></pre>
