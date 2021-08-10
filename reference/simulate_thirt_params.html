@@ -120,7 +120,13 @@
     <p>Generate parameters that conform to the Thurstonian IRT model.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>simulate_thirt_params</span><span class='op'>(</span>n_person <span class='op'>=</span> <span class='fl'>2</span>, n_item <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>2</span>, <span class='fl'>4</span><span class='op'>)</span>, n_block <span class='op'>=</span> <span class='fl'>2</span>, n_dim <span class='op'>=</span> <span class='fl'>4</span><span class='op'>)</span></pre>
+    <pre class="usage"><span class='fu'>simulate_thirt_params</span><span class='op'>(</span>
+  n_person <span class='op'>=</span> <span class='fl'>2</span>,
+  n_item <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='fl'>2</span>, <span class='fl'>4</span><span class='op'>)</span>,
+  n_neg <span class='op'>=</span> <span class='fl'>1</span>,
+  n_block <span class='op'>=</span> <span class='fl'>2</span>,
+  n_dim <span class='op'>=</span> <span class='fl'>4</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -131,7 +137,11 @@
     </tr>
     <tr>
       <th>n_item</th>
-      <td><p>vector of length <code>[n_block]</code> indicating the number of items for each block</p></td>
+      <td><p>integer or vector of length <code>[n_block]</code> indicating the number of items for each block</p></td>
+    </tr>
+    <tr>
+      <th>n_neg</th>
+      <td><p>integer or vector of length <code>[n_block]</code> indicating the number of negatively-keyed items for each block</p></td>
     </tr>
     <tr>
       <th>n_block</th>
