@@ -14,8 +14,10 @@
 #'                `n_iter` for the number of iterations,
 #'                `n_burnin` for the number of burn-ins,
 #'                `step_size_sd` for the step size of new parameter generation.
-#' @param initial_params a list of initial parameters to start the algorithm.
-#' @param fixed_params a list of fixed parameters to be excluded from estimation.
+#' @param initial_params a list of initial parameters to start the algorithm,
+#'                       each parameter needs to be a matrix.
+#' @param fixed_params a list of fixed parameters to be excluded from estimation,
+#'                     each parameter needs to be a matrix.
 #'
 #' @return a list of three objects:
 #'         `all_iters` is a list of length `[n_iter]` for parameter estimates for all iterations,
@@ -26,8 +28,22 @@
 #' \dontrun{
 #' set.seed(202108)
 #'
+#' # designs
+#' n_person      <- 100
+#' n_item        <- 4
+#' n_neg         <- 2
+#' n_block       <- 4
+#' n_dim         <- 4
+#' n_iter        <- 5000
+#' n_burnin      <- 200
+#' step_size_sd  <- 0.1
+#'
 #' # simulate parameters
-#' params <- simulate_thirt_params(n_person = 5)
+#' params <- simulate_thirt_params(n_person = n_person,
+#'                                 n_item   = n_item,
+#'                                 n_neg    = n_neg,
+#'                                 n_block  = n_block,
+#'                                 n_dim    = n_dim)
 #' resp   <- do.call(simulate_thirt_resp, params)
 #' gamma  <- params$gamma$gamma
 #' lambda <- params$items$lambda
@@ -35,17 +51,22 @@
 #' theta  <- params$persons[, -1]
 #'
 #' # estimation output
-#' output <- estimate_thirt_params_mcmc(resp  = resp$resp,
-#'                                      items = resp$items,
-#'                                      control = list(n_iter = 5000,
-#'                                                     n_burnin = 200,
-#'                                                     step_size_sd = 0.1))
-#'
+#' start_mcmc <- Sys.time()
+#' output     <- estimate_thirt_params_mcmc(resp  = resp$resp,
+#'                                          items = resp$items,
+#'                                          control = list(n_iter   = n_iter,
+#'                                                         n_burnin = n_burnin,
+#'                                                         step_size_sd = step_size_sd),
+#'                                          fixed_params = list(psisq = matrix(psisq))
+#' )
+#' end_mcmc   <- Sys.time()
+#' #'
 #' # correlate estimated and true parameters
 #' diag(cor(theta, output$mean_mcmc$theta))
 #' cor(gamma, output$mean_mcmc$gamma)
 #' cor(lambda, output$mean_mcmc$lambda)
-#' cor(psisq,   output$mean_mcmc$psisq)
+#' cor(psisq, output$mean_mcmc$psisq)
+#' (time_mcmc <- end_mcmc - start_mcmc)
 #' }
 #'
 #' @importFrom magrittr
@@ -54,8 +75,8 @@
 estimate_thirt_params_mcmc <- function(resp,
                                        items,
                                        control = list(),
-                                       initial_params = NULL,
-                                       fixed_params   = NULL) {
+                                       initial_params = list(),
+                                       fixed_params   = list()) {
 
   # set up new environment to store arguments
   mcmc_envir     <- new.env()
@@ -84,6 +105,10 @@ estimate_thirt_params_mcmc <- function(resp,
          value = modifyList(x   = control_default,
                             val = control),
          envir = mcmc_envir)
+
+  # fixed parameters
+  initial_params <- modifyList(x   = initial_params,
+                               val = fixed_params)
 
   # initial parameters
   assign(x     = "arguments",
@@ -168,13 +193,14 @@ estimate_thirt_params_mcmc <- function(resp,
 ## SINGLE ITERATION ##
 
 estimate_thirt_params_mcmc_one <- function(envir,
-                                           fixed_params = c()) {
+                                           fixed_params) {
 
   # list of params and fixed params
   params_list   <- c("theta", "gamma", "lambda", "psisq")
+  fixed_list    <- names(fixed_params)
 
   # update params for those not in fixed_params
-  for(params in setdiff(params_list, fixed_params)) {
+  for(params in setdiff(params_list, fixed_list)) {
 
     # individual update functions
     update_fun_one <- paste0("update_thirt_", params, "_mcmc")
@@ -182,7 +208,7 @@ estimate_thirt_params_mcmc_one <- function(envir,
       do.call(what = update_fun_one,
               args = list(x))
     }
-s
+
     # returns new environment
     envir <- update_fun(x = envir)
   } # END for params LOOP
