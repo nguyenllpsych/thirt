@@ -503,9 +503,8 @@ generate_new_params <- function(params_old, step_size_sd) {
 
 update_with_metrop <- function(loglik_old, loglik_new,
                                prior_old, prior_new) {
-
   # acceptance probability
-  A <- exp(loglik_new + prior_new) / exp(loglik_old + prior_old)
+  A <- exp(loglik_new + prior_new - loglik_old - prior_old)
   A[is.na(A)] <- 0
 
   # random number gen
@@ -514,3 +513,71 @@ update_with_metrop <- function(loglik_old, loglik_new,
   # bool for acceptance of moving
   return (U < A)
 } # END update_with_metrop FUNCTION
+
+
+## ACCEPTANCE RATE COUNTER ##
+
+#' @export
+count_accept <- function(all_iters,
+                         resp) {
+
+  n_iters       <- length(all_iters$gamma) - 1
+  n_persons     <- length(unique(resp$resp$person))
+  n_item        <- as.data.frame(table(resp$items$block))[ , 2]
+  block_size    <- choose2(n_item)
+  n_block       <- length(unique(resp$items$block))
+  n_person      <- length(unique(resp$resp$person))
+  n_dim         <- length(unique(resp$items$dim))
+
+  gamma_index   <- rep(c(1:n_block), times = block_size)
+  items_index   <- rep(c(1:n_block), times = n_item)
+  persons_index <- rep(c(1:n_persons), times = n_dim)
+  gamma_count   <- theta_count <- psisq_count <- lambda_count <- list()
+
+  ## Gamma ##
+  for (iters in seq(from = 2, to = n_iters)) {
+    gamma_list <-
+      as.numeric(all_iters$gamma[[iters]] != all_iters$gamma[[iters - 1]])
+    gamma_count[[iters - 1]] <- tapply(X = gamma_list,
+                                       INDEX = gamma_index,
+                                       FUN = unique) %>% matrix()
+  }
+  gamma_count <- Reduce(`+`, gamma_count)/n_iters
+
+  ## Lambda ##
+  for (iters in seq(from = 2, to = n_iters)) {
+    lambda_list <-
+      as.numeric(all_iters$lambda[[iters]] != all_iters$lambda[[iters - 1]])
+    lambda_count[[iters - 1]] <- tapply(X = lambda_list,
+                                        INDEX = items_index,
+                                        FUN = unique) %>% matrix()
+  }
+  lambda_count <- Reduce(`+`, lambda_count)/n_iters
+
+  ## Psisq ##
+  for (iters in seq(from = 2, to = n_iters)) {
+    psisq_list <-
+      as.numeric(all_iters$psisq[[iters]] != all_iters$psisq[[iters - 1]])
+    psisq_count[[iters - 1]] <- tapply(X = psisq_list,
+                                       INDEX = items_index,
+                                       FUN = unique) %>% matrix()
+  }
+  psisq_count <- Reduce(`+`, psisq_count)/n_iters
+
+  ## Theta ##
+  for (iters in seq(from = 2, to = n_iters)) {
+    theta_list <-
+      as.numeric(all_iters$theta[[iters]] != all_iters$theta[[iters - 1]])
+    theta_count[[iters - 1]] <- tapply(X = theta_list,
+                                       INDEX = persons_index,
+                                       FUN = unique) %>% matrix()
+  }
+  theta_count <- Reduce(`+`, theta_count)/n_iters
+
+
+  return(list(gamma  = gamma_count,
+              lambda = lambda_count,
+              psisq  = psisq_count,
+              theta  = theta_count))
+}
+

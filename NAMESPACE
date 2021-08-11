@@ -2,6 +2,7 @@
 
 export(choose2)
 export(combn2)
+export(count_accept)
 export(d_gamma_prior)
 export(d_lambda_prior)
 export(d_psisq_prior)
