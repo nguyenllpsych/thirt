@@ -175,7 +175,7 @@ p_thirt_block <- function(perm_list,
                   theta1  = theta[ , dim1],
                   theta2  = theta[ , dim2],
                   psisq1  = psisq[items_idx, ][pair1, "psisq"],
-                  psisq2  = psisq[items_idx, ][pair1, "psisq"])
+                  psisq2  = psisq[items_idx, ][pair2, "psisq"])
   }
 
   # add probabilities of reverse response patterns
