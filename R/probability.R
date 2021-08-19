@@ -328,3 +328,112 @@ split_pair <- function(pair, item) {
 join_pair <- function(df, resp, col) {
   return(paste0(df[which(df$id == resp),][col[1]], "-", df[which(df$id == resp),][col[2]]))
 }
+
+#' @export
+p_thirtC <- function(gamma, items, persons) {
+
+  ##################
+  ## test designs ##
+  ##################
+
+  # number of blocks, dimensions, people, items per block
+  n_block  <- length(unique(items$block))
+  n_dim    <- length(unique(items$dim))
+  n_person <- nrow(persons)
+  n_item   <- as.data.frame(table(items$block))[ , 2]
+
+  # item parameters as individual data frames
+  lambda   <- data.frame(block  = items$block,
+                         lambda = items$lambda)
+  psisq    <- data.frame(block  = items$block,
+                         psisq  = items$psisq)
+  dict     <- data.frame(item   = items$item,
+                         block  = items$block,
+                         dim    = items$dim)
+
+  # person parameters with only thetas
+  theta    <- persons[ , -1]
+
+  ######################
+  ## all permutations ##
+  ######################
+
+  # create an empty list of size n_block
+  permutation_list <- vector("list", n_block)
+
+  # add each block permutation to the list
+  for (block in seq_len(n_block)) {
+
+    # create permutation list for each block
+    permutation_block <- as.data.frame(
+      find_all_permutations(n    = n_item[block],
+                            init = 1)
+    )
+
+    # id variable to identify each response pattern in a block
+    # so later different blocks can be combined in a smaller matrix of ids
+    permutation_block$id <- paste0(
+
+      # block identifier
+      "b", block,
+
+      # response pattern identifier
+      "r", seq(nrow(permutation_block))
+    )
+
+    # append each block's permutation to a large permutation list
+    permutation_list[[block]]     <- permutation_block
+  } # END for block LOOP
+
+  # find all pair combinations specific to each permutation
+  permutation_list <- lapply(
+    X   = permutation_list,
+    FUN = function(x) {
+
+      # the combinations and names of those combinations
+      combo <- combn2(seq(min(x$V1), max(x$V1)))
+      nms   <- paste0(combo[1, ], "-", combo[2, ])
+
+      # the values and the column that each preference appears
+      vals  <- as.matrix(x[ , -ncol(x)])
+      cols  <- col(vals)
+
+      # determining whether combination is higher
+      for(col in seq_len(ncol(combo))){
+        col1           <- rowSums(cols * (vals == combo[1, col]))
+        col2           <- rowSums(cols * (vals == combo[2, col]))
+        x[ , nms[col]] <- as.numeric(col2 > col1)
+      }
+
+      x
+    })
+
+  #############################
+  ## probability calculation ##
+  #############################
+
+  probability <- vector(mode = "list", length = n_block)
+
+  # probability matrix of dim [person X block_size]
+
+  for(block in seq_len(n_block)) {
+    perm_list            <- permutation_list[[block]]
+
+    probability[[block]] <- p_thirt_blockC(n_person = n_person,
+                                           n_dim = n_dim,
+                                           block = block,
+                                           n_perm = nrow(perm_list),
+                                           n_item = n_item[block],
+                                           pair_names = colnames(tail(perm_list, c(0, -(n_item[block] + 1)))),
+                                           perm_id = perm_list$id,
+                                           perm_item_vector = as.vector(t(t(perm_list[, 1:n_item[block]]))),
+                                           params_gamma = gamma[which(gamma$block == block), ]$gamma,
+                                           params_lambda = lambda[which(lambda$block == block), ]$lambda,
+                                           params_psisq = psisq[which(psisq$block == block), ]$psisq,
+                                           vector_theta = as.vector(t(t(theta))),
+                                           dict_item = dict[which(dict$block == block), ]$item,
+                                           dict_dim = dict[which(dict$block == block), ]$dim)
+  } # END for block LOOP
+
+  return(probability)
+} # END p_thirtC FUNCTION
