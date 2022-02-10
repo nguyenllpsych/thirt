@@ -41,6 +41,7 @@
 #'             dcast
 #'
 #' @export
+# TODO: compute probabilities for only selected responses, not all probabilities
 loglik_thirt <- function(gamma, items, persons, resp) {
 
   # pull out important info
@@ -48,7 +49,7 @@ loglik_thirt <- function(gamma, items, persons, resp) {
   n_person  <- nrow(persons)
 
   # calculate all probabilities
-  probs     <- p_thirt(gamma = gamma, items = items, persons = persons)
+  probs     <- p_thirtC(gamma = gamma, items = items, persons = persons)
 
   # resp to wide data.frame of dimension [n_person X n_block]
   resp_wide <- dcast(resp, person ~ block, value.var = "resp")[-1]
