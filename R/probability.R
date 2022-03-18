@@ -15,6 +15,13 @@
 #' @param persons a data.frame of length `[number of people]` with variables:
 #'                variable `person` of the format `p` for person number `p`,
 #'                variables named `theta_d` for dimension number `d`.
+#' @param picked_order a data.frame of length `[person x block]` with four variables:
+#'             variable `person` of the format `p` for person number `p`,
+#'             variable `block` of the format `b` for block number `b`,
+#'             variable `resp` of the format `r` for response order number `r`
+#'                      which follows mupp::find_all_permutation orders,
+#'             variable `seq` which includes the items in ranked order by each person.
+#'             data.frame similar to output in `simulate_thirt_resp()$resp`
 #'
 #' @return a list of length `[block]` of matrices with dimension `[person X permutation]`
 #'         of probabilities for each response pattern per block.
@@ -39,7 +46,7 @@
 #'             find_all_permutations
 #'
 #' @export
-p_thirt <- function(gamma, items, persons) {
+p_thirt <- function(gamma, items, persons, picked_order = NULL) {
 
   ##################
   ## test designs ##
@@ -121,16 +128,30 @@ p_thirt <- function(gamma, items, persons) {
   ## probability pair-wise ##
   ###########################
 
-  Map(f         = p_thirt_block,
-      perm_list = permutation_list,
-      n_item    = n_item,
-      n_person  = list(n_person),
-      gamma     = list(gamma),
-      lambda    = list(lambda),
-      theta     = list(theta),
-      psisq     = list(psisq),
-      dict      = list(dict),
-      block     = c(seq_len(n_block)))
+  if (is.null(picked_order)) {
+    Map(f         = p_thirt_block,
+        perm_list = permutation_list,
+        n_item    = n_item,
+        n_person  = list(n_person),
+        gamma     = list(gamma),
+        lambda    = list(lambda),
+        theta     = list(theta),
+        psisq     = list(psisq),
+        dict      = list(dict),
+        block     = c(seq_len(n_block)))
+  } else {
+    Map(f         = p_thirt_block,
+        perm_list = permutation_list,
+        n_item    = n_item,
+        n_person  = list(n_person),
+        gamma     = list(gamma),
+        lambda    = list(lambda),
+        theta     = list(theta),
+        psisq     = list(psisq),
+        dict      = list(dict),
+        picked_order = list(picked_order),
+        block     = c(seq_len(n_block)))
+  }
 } # END p_thirt FUNCTION
 
 ######################
@@ -146,6 +167,7 @@ p_thirt_block <- function(perm_list,
                           theta,
                           psisq,
                           dict,
+                          picked_order = NULL,
                           block){
 
   # create an empty matrix of size [person X block_size]
@@ -222,9 +244,109 @@ p_thirt_block <- function(perm_list,
   # block/resp keys are in permutation_list
   colnames(probability) <- c(perm_list$id)
 
-  # probability for each permutation per block
-  # iterate through response patterns per block
-  for (resp in colnames(probability)) {
+  ##################################
+  ## for ALL permutations         ##
+  ## if no picked_order provided  ##
+  ##################################
+
+  if(is.null(picked_order)) {
+
+    # probability for each permutation per block
+    # iterate through response patterns per block
+    for (resp in colnames(probability)) {
+
+      # iterate through number of separate probabilities to joint multiply
+      # moving from the end/smaller probability first
+      # e.g. 2 master probabilities for 3 items: p(1 > 2, 3) * p(2 > 3)
+      for (probmaster in seq_len(n_item - 1)) {
+        # iterate through number of probabilities in the numerator
+        # num_list is a vector of pairwise probability names
+        # e.g. for master probability p(1 > 2, 3):
+        #      numerator = p(1 > 2) * p(1 > 3)
+        #      num_list  = c("1-2", "1-3")
+        num_list <- c()
+
+        for (numlen in seq_len(probmaster)) {
+          num      <-  join_pair(df   = perm_list,
+                                 resp = resp,
+                                 col = c(n_item - probmaster,
+                                         n_item - (probmaster - 1 * numlen)))
+          num_list <- append(num_list, num)
+        } # END for numlen LOOP
+
+        # create a list of all items present in the numerators
+        item_list <- unique(as.numeric(split_pair(num_list)))
+
+        # create a list of all denominators that correspond to a numerator
+        #   each element in den_list is a vector
+        #   e.g. probmaster   = p(1 > 2, 3)
+        #        numerator    = p(1 > 2) * p(1 > 3)
+        #        denominator  = [p(1 > 2) * p(1 > 3)]
+        #                       + [p(2 > 1) * p(2 > 3)]
+        #                       + [p(3 > 1) * p(3 > 2)]
+        #        den_list     = [[1]] c("1-2", "1-3")
+        #                       [[2]] c("2-1", "2-3")
+        #                       [[3]] c("3-1", "3-2")
+        den_list  <- vector("list", length = length(item_list))
+        for (item in seq(length(item_list))) {
+          den_list[[item]] <- paste0(item_list[item], "-", item_list[-item])
+        } # END for item LOOP
+
+        # probability calculation: (1) multiply elements within each vector in den_list
+        #                          (2) sum across all vectors within den_list
+        #                          (3) multiply elements in num_list
+        #                          (4) divide (3) by (2)
+        #                          (5) multiply (4) across all probmaster
+        step2 <- matrix(0, nrow = n_person, ncol = 1)
+        for (den in seq(length(den_list))){
+
+          # step 1: multiply elements within each vector in den_list
+          #         e.g. p(1 > 2) * p(1 > 3) and p(2 > 1) * p(2 > 3) and ...
+          step1 <- apply(as.matrix(prob_pair[ , den_list[[den]], drop = FALSE]),
+                         MARGIN = 1,
+                         FUN = "prod")
+
+          # step 2: sum across all vectors within den_list
+          #         e.g. [p(1 > 2) * p(1 > 3)] + [p(2 > 1) * p(2 > 3)] + ...
+          step2 <- step2 + step1
+        }
+
+        # step 3: multiply elements in num_list
+        #         e.g. p(1 > 2) * p(1 > 3)
+        step3   <- apply(as.matrix(prob_pair[ , num_list, drop = FALSE]),
+                         MARGIN = 1,
+                         FUN = "prod")
+
+        # step 4: divide (3) by (2)
+        step4   <- step3 / step2
+
+        # step 5: multiply (4) across all probmaster
+        #         e.g. p(1 > 2, 3) * p(2 > 3)
+        probability[ , resp] <- probability[ , resp] * step4
+      }  # END for probmaster LOOP
+    } # END for resp LOOP
+
+    # convert names of response patterns to numeric
+    # compatible with mupp::find_permutation_order()
+    colnames(probability) <- seq_len(ncol(probability))
+
+  } else {
+
+    ##############################
+    ## for ONLY selected resp   ##
+    ## if picked_order provided ##
+    ##############################
+
+    # probability is a matrix of dimension [person x 1]
+    probability <- matrix(1,
+                          nrow = n_person,
+                          ncol = 1)
+
+    # picked_order for current block
+    resp <- picked_order[which(picked_order$block == block),]
+    resp <- matrix(
+      paste0("b", resp$block, "r", resp$resp),
+      nrow = n_person)
 
     # iterate through number of separate probabilities to joint multiply
     # moving from the end/smaller probability first
@@ -239,12 +361,19 @@ p_thirt_block <- function(perm_list,
       num_list <- c()
 
       for (numlen in seq_len(probmaster)) {
-        num      <-  join_pair(df   = perm_list,
-                               resp = resp,
-                               col = c(n_item - probmaster,
-                                       n_item - (probmaster - 1 * numlen)))
+        num      <-  apply(X = resp,
+                           MARGIN = 1,
+                           FUN = function(x){
+                             join_pair(df   = perm_list,
+                                       resp = x,
+                                       col = c(n_item - probmaster,
+                                               n_item - (probmaster - 1 * numlen)))
+                           })
         num_list <- append(num_list, num)
       } # END for numlen LOOP
+
+      # num_list to matrix, each row is numerator list for each person
+      num_list <- matrix(num_list, nrow = n_person, byrow = FALSE)
 
       # create a list of all items present in the numerators
       item_list <- unique(as.numeric(split_pair(num_list)))
@@ -277,6 +406,7 @@ p_thirt_block <- function(perm_list,
         step1 <- apply(as.matrix(prob_pair[ , den_list[[den]], drop = FALSE]),
                        MARGIN = 1,
                        FUN = "prod")
+        step1 <- matrix(step1, ncol = 1)
 
         # step 2: sum across all vectors within den_list
         #         e.g. [p(1 > 2) * p(1 > 3)] + [p(2 > 1) * p(2 > 3)] + ...
@@ -285,22 +415,28 @@ p_thirt_block <- function(perm_list,
 
       # step 3: multiply elements in num_list
       #         e.g. p(1 > 2) * p(1 > 3)
-      step3   <- apply(as.matrix(prob_pair[ , num_list, drop = FALSE]),
+
+      # logical matrix to select different num_list per person
+      logmat <- t(apply(X = num_list,
+                        MARGIN = 1,
+                        FUN = function(x) colnames(prob_pair) %in% x))
+      pickedmat <- matrix(nrow = n_person, ncol = probmaster)
+      for(i in seq(nrow(logmat))){
+        pickedmat[i, ] <- prob_pair[i, logmat[i, ]]
+      }
+      step3   <- apply(X = pickedmat,
                        MARGIN = 1,
                        FUN = "prod")
+      step3 <- matrix(step3, nrow = n_person)
 
       # step 4: divide (3) by (2)
       step4   <- step3 / step2
 
       # step 5: multiply (4) across all probmaster
       #         e.g. p(1 > 2, 3) * p(2 > 3)
-      probability[ , resp] <- probability[ , resp] * step4
+      probability <- probability * step4
     }  # END for probmaster LOOP
-  } # END for resp LOOP
-
-  # convert names of response patterns to numeric
-  # compatible with mupp::find_permutation_order()
-  colnames(probability) <- seq_len(ncol(probability))
+  } # END if picked_order else STATEMENT
 
   return(probability)
 }
