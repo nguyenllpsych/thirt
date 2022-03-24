@@ -376,10 +376,13 @@ p_thirt_block <- function(perm_list,
       num_list <- matrix(num_list, nrow = n_person, byrow = FALSE)
 
       # create a list of all items present in the numerators
-      item_list <- unique(as.numeric(split_pair(num_list)))
+      # each column is one person
+      item_list <- t(apply(X = num_list, MARGIN = 1, FUN = function(x){
+        unique(as.numeric(split_pair(x)))
+      }))
 
       # create a list of all denominators that correspond to a numerator
-      #   each element in den_list is a vector
+      #   each element in den_list is a matrix with n_row = n_person
       #   e.g. probmaster   = p(1 > 2, 3)
       #        numerator    = p(1 > 2) * p(1 > 3)
       #        denominator  = [p(1 > 2) * p(1 > 3)]
@@ -388,9 +391,15 @@ p_thirt_block <- function(perm_list,
       #        den_list     = [[1]] c("1-2", "1-3")
       #                       [[2]] c("2-1", "2-3")
       #                       [[3]] c("3-1", "3-2")
-      den_list  <- vector("list", length = length(item_list))
-      for (item in seq(length(item_list))) {
-        den_list[[item]] <- paste0(item_list[item], "-", item_list[-item])
+      den_list  <- vector("list", length = ncol(item_list))
+      for (item in seq(length(den_list))) {
+        den_list[[item]] <- matrix(apply(X = item_list,
+                                         MARGIN = 1,
+                                         FUN = function(x) {
+                                           paste0(x[item], "-", x[-item])
+                                         }),
+                                   nrow = n_person,
+                                   byrow = T)
       } # END for item LOOP
 
       # probability calculation: (1) multiply elements within each vector in den_list
@@ -403,10 +412,14 @@ p_thirt_block <- function(perm_list,
 
         # step 1: multiply elements within each vector in den_list
         #         e.g. p(1 > 2) * p(1 > 3) and p(2 > 1) * p(2 > 3) and ...
-        step1 <- apply(as.matrix(prob_pair[ , den_list[[den]], drop = FALSE]),
-                       MARGIN = 1,
-                       FUN = "prod")
-        step1 <- matrix(step1, ncol = 1)
+
+        # logical matrix to select different den_list per person
+        logmat <- apply(X = den_list[[den]],
+                        MARGIN = 1,
+                        FUN = function(x) colnames(prob_pair) %in% x)
+        pickedmat <- t(logmat)*log(prob_pair)
+        step1 <- exp(rowSums(pickedmat))
+        step1 <- matrix(step1, ncol = 1, byrow = T)
 
         # step 2: sum across all vectors within den_list
         #         e.g. [p(1 > 2) * p(1 > 3)] + [p(2 > 1) * p(2 > 3)] + ...
@@ -417,17 +430,12 @@ p_thirt_block <- function(perm_list,
       #         e.g. p(1 > 2) * p(1 > 3)
 
       # logical matrix to select different num_list per person
-      logmat <- t(apply(X = num_list,
-                        MARGIN = 1,
-                        FUN = function(x) colnames(prob_pair) %in% x))
-      pickedmat <- matrix(nrow = n_person, ncol = probmaster)
-      for(i in seq(nrow(logmat))){
-        pickedmat[i, ] <- prob_pair[i, logmat[i, ]]
-      }
-      step3   <- apply(X = pickedmat,
-                       MARGIN = 1,
-                       FUN = "prod")
-      step3 <- matrix(step3, nrow = n_person)
+      logmat <- apply(X = num_list,
+                      MARGIN = 1,
+                      FUN = function(x) colnames(prob_pair) %in% x)
+      pickedmat <- t(logmat)*log(prob_pair)
+      step3   <- exp(rowSums(pickedmat))
+      step3 <- matrix(step3, nrow = n_person, byrow = T)
 
       # step 4: divide (3) by (2)
       step4   <- step3 / step2
