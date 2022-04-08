@@ -474,7 +474,7 @@ join_pair <- function(df, resp, col) {
 }
 
 #' @export
-p_thirtC <- function(gamma, items, persons) {
+p_thirtC <- function(gamma, items, persons, picked_order = NULL) {
 
   ##################
   ## test designs ##
@@ -563,20 +563,39 @@ p_thirtC <- function(gamma, items, persons) {
   for(block in seq_len(n_block)) {
     perm_list            <- permutation_list[[block]]
 
-    probability[[block]] <- p_thirt_blockC(n_person = n_person,
-                                           n_dim = n_dim,
-                                           block = block,
-                                           n_perm = nrow(perm_list),
-                                           n_item = n_item[block],
-                                           pair_names = colnames(tail(perm_list, c(0, -(n_item[block] + 1)))),
-                                           perm_id = perm_list$id,
-                                           perm_item_vector = as.vector(t(t(perm_list[, 1:n_item[block]]))),
-                                           params_gamma = gamma[which(gamma$block == block), ]$gamma,
-                                           params_lambda = lambda[which(lambda$block == block), ]$lambda,
-                                           params_psisq = psisq[which(psisq$block == block), ]$psisq,
-                                           vector_theta = as.vector(t(t(theta))),
-                                           dict_item = dict[which(dict$block == block), ]$item,
-                                           dict_dim = dict[which(dict$block == block), ]$dim)
+    if (is.null(picked_order)) {
+      probability[[block]] <- p_thirt_blockC(n_person = n_person,
+                                             n_dim = n_dim,
+                                             block = block,
+                                             n_perm = nrow(perm_list),
+                                             n_item = n_item[block],
+                                             pair_names = colnames(tail(perm_list, c(0, -(n_item[block] + 1)))),
+                                             perm_id = perm_list$id,
+                                             perm_item_vector = as.vector(t(t(perm_list[, 1:n_item[block]]))),
+                                             params_gamma = gamma[which(gamma$block == block), ]$gamma,
+                                             params_lambda = lambda[which(lambda$block == block), ]$lambda,
+                                             params_psisq = psisq[which(psisq$block == block), ]$psisq,
+                                             vector_theta = as.vector(t(t(theta))),
+                                             dict_item = dict[which(dict$block == block), ]$item,
+                                             dict_dim = dict[which(dict$block == block), ]$dim,
+                                             picked_order = c(NA))
+    } else {
+      probability[[block]] <- p_thirt_blockC(n_person = n_person,
+                                             n_dim = n_dim,
+                                             block = block,
+                                             n_perm = nrow(perm_list),
+                                             n_item = n_item[block],
+                                             pair_names = colnames(tail(perm_list, c(0, -(n_item[block] + 1)))),
+                                             perm_id = perm_list$id,
+                                             perm_item_vector = as.vector(t(t(perm_list[, 1:n_item[block]]))),
+                                             params_gamma = gamma[which(gamma$block == block), ]$gamma,
+                                             params_lambda = lambda[which(lambda$block == block), ]$lambda,
+                                             params_psisq = psisq[which(psisq$block == block), ]$psisq,
+                                             vector_theta = as.vector(t(t(theta))),
+                                             dict_item = dict[which(dict$block == block), ]$item,
+                                             dict_dim = dict[which(dict$block == block), ]$dim,
+                                             picked_order = picked_order[which(picked_order$block == block),]$resp)
+    } # END if else STATEMENT
   } # END for block LOOP
 
   return(probability)

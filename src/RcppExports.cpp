@@ -11,8 +11,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // p_thirt_blockC
-NumericMatrix p_thirt_blockC(int n_person, int n_dim, int block, int n_perm, int n_item, CharacterVector pair_names, CharacterVector perm_id, IntegerVector perm_item_vector, NumericVector params_gamma, NumericVector params_lambda, NumericVector params_psisq, NumericVector vector_theta, IntegerVector dict_item, IntegerVector dict_dim);
-RcppExport SEXP _thirt_p_thirt_blockC(SEXP n_personSEXP, SEXP n_dimSEXP, SEXP blockSEXP, SEXP n_permSEXP, SEXP n_itemSEXP, SEXP pair_namesSEXP, SEXP perm_idSEXP, SEXP perm_item_vectorSEXP, SEXP params_gammaSEXP, SEXP params_lambdaSEXP, SEXP params_psisqSEXP, SEXP vector_thetaSEXP, SEXP dict_itemSEXP, SEXP dict_dimSEXP) {
+NumericMatrix p_thirt_blockC(int n_person, int n_dim, int block, int n_perm, int n_item, CharacterVector pair_names, CharacterVector perm_id, IntegerVector perm_item_vector, NumericVector params_gamma, NumericVector params_lambda, NumericVector params_psisq, NumericVector vector_theta, IntegerVector dict_item, IntegerVector dict_dim, IntegerVector picked_order);
+RcppExport SEXP _thirt_p_thirt_blockC(SEXP n_personSEXP, SEXP n_dimSEXP, SEXP blockSEXP, SEXP n_permSEXP, SEXP n_itemSEXP, SEXP pair_namesSEXP, SEXP perm_idSEXP, SEXP perm_item_vectorSEXP, SEXP params_gammaSEXP, SEXP params_lambdaSEXP, SEXP params_psisqSEXP, SEXP vector_thetaSEXP, SEXP dict_itemSEXP, SEXP dict_dimSEXP, SEXP picked_orderSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -30,13 +30,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type vector_theta(vector_thetaSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type dict_item(dict_itemSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type dict_dim(dict_dimSEXP);
-    rcpp_result_gen = Rcpp::wrap(p_thirt_blockC(n_person, n_dim, block, n_perm, n_item, pair_names, perm_id, perm_item_vector, params_gamma, params_lambda, params_psisq, vector_theta, dict_item, dict_dim));
+    Rcpp::traits::input_parameter< IntegerVector >::type picked_order(picked_orderSEXP);
+    rcpp_result_gen = Rcpp::wrap(p_thirt_blockC(n_person, n_dim, block, n_perm, n_item, pair_names, perm_id, perm_item_vector, params_gamma, params_lambda, params_psisq, vector_theta, dict_item, dict_dim, picked_order));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_thirt_p_thirt_blockC", (DL_FUNC) &_thirt_p_thirt_blockC, 14},
+    {"_thirt_p_thirt_blockC", (DL_FUNC) &_thirt_p_thirt_blockC, 15},
     {NULL, NULL, 0}
 };
 
