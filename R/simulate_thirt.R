@@ -163,7 +163,7 @@ simulate_thirt_resp <- function(gamma, items, persons) {
   n_item      <- as.data.frame(table(items[block_name]))[ , 2]
 
   # find probability of all possible response patterns given parameters
-  probs <- p_thirt(gamma, items, persons)
+  probs <- p_thirtC(gamma, items, persons)
 
   # simulate response patterns given the probabilities
   # a list of length n_block with the index of response patterns per block
