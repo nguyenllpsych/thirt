@@ -21,8 +21,8 @@
 #'
 #' @return a list of three objects:
 #'         `all_iters` is a list of length `[n_iter]` for parameter estimates for all iterations,
-#'         `mean_mcmc` is a list of length [4] for mean of four parameters after burn-ins,
-#'         `sd_mcmc` is a list of length [4] for SD of four parameters after burn-ins.
+#'         `mean_mcmc` is a list of length 4 for mean of four parameters after burn-ins,
+#'         `sd_mcmc` is a list of length 4 for SD of four parameters after burn-ins.
 #'
 #' @examples
 #' \dontrun{

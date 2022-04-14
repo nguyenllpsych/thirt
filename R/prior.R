@@ -17,6 +17,7 @@ d_thetas_prior <- function(x, ...) {
 }
 
 #' @rdname prior
+#' @param direction integer for positively and negatively keyed items
 #' @export
 d_lambda_prior <- function(x, direction = 1, ...) {
   dtruncnorm(direction * x, a = 0, b = 1.2, ...)

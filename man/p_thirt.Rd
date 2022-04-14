@@ -4,7 +4,7 @@
 \alias{p_thirt}
 \title{Calculate probability}
 \usage{
-p_thirt(gamma, items, persons)
+p_thirt(gamma, items, persons, picked_order = NULL)
 }
 \arguments{
 \item{gamma}{a data.frame of length \verb{[total binary outcomes]} with two variables:
@@ -22,6 +22,14 @@ variable \code{dim} for dimensions.}
 \item{persons}{a data.frame of length \verb{[number of people]} with variables:
 variable \code{person} of the format \code{p} for person number \code{p},
 variables named \code{theta_d} for dimension number \code{d}.}
+
+\item{picked_order}{a data.frame of length \verb{[person x block]} with four variables:
+variable \code{person} of the format \code{p} for person number \code{p},
+variable \code{block} of the format \code{b} for block number \code{b},
+variable \code{resp} of the format \code{r} for response order number \code{r}
+which follows mupp::find_all_permutation orders,
+variable \code{seq} which includes the items in ranked order by each person.
+data.frame similar to output in \code{simulate_thirt_resp()$resp}}
 }
 \value{
 a list of length \verb{[block]} of matrices with dimension \verb{[person X permutation]}

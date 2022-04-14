@@ -33,6 +33,8 @@ r_gamma_prior(n, ...)
 
 \item{...}{additional arguments}
 
+\item{direction}{integer for positively and negatively keyed items}
+
 \item{n}{number of observations for the simulation}
 }
 \description{

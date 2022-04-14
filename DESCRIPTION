@@ -29,7 +29,8 @@ Imports:
     mupp,
     truncnorm,
     reshape2,
-    tibble (>= 3.1)
+    tibble (>= 3.1),
+    thurstonianIRT (>= 0.12.1)
 Suggests:
     covr,
     knitr (>= 1.20),
@@ -44,4 +45,4 @@ Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2

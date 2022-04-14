@@ -39,8 +39,8 @@ each parameter needs to be a matrix.}
 \value{
 a list of three objects:
 \code{all_iters} is a list of length \verb{[n_iter]} for parameter estimates for all iterations,
-\code{mean_mcmc} is a list of length \link{4} for mean of four parameters after burn-ins,
-\code{sd_mcmc} is a list of length \link{4} for SD of four parameters after burn-ins.
+\code{mean_mcmc} is a list of length 4 for mean of four parameters after burn-ins,
+\code{sd_mcmc} is a list of length 4 for SD of four parameters after burn-ins.
 }
 \description{
 Estimate parameters with MCMC
