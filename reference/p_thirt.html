@@ -53,7 +53,7 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">p_thirt</span><span class="op">(</span><span class="va">gamma</span>, <span class="va">items</span>, <span class="va">persons</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">p_thirt</span><span class="op">(</span><span class="va">gamma</span>, <span class="va">items</span>, <span class="va">persons</span>, picked_order <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -74,6 +74,14 @@ variable <code>dim</code> for dimensions.</p></dd>
 <dd><p>a data.frame of length <code>[number of people]</code> with variables:
 variable <code>person</code> of the format <code>p</code> for person number <code>p</code>,
 variables named <code>theta_d</code> for dimension number <code>d</code>.</p></dd>
+<dt>picked_order</dt>
+<dd><p>a data.frame of length <code>[person x block]</code> with four variables:
+variable <code>person</code> of the format <code>p</code> for person number <code>p</code>,
+variable <code>block</code> of the format <code>b</code> for block number <code>b</code>,
+variable <code>resp</code> of the format <code>r</code> for response order number <code>r</code>
+which follows mupp::find_all_permutation orders,
+variable <code>seq</code> which includes the items in ranked order by each person.
+data.frame similar to output in <code>simulate_thirt_resp()$resp</code></p></dd>
 </dl></div>
     <div id="value">
     <h2>Value</h2>
