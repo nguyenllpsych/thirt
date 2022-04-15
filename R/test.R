@@ -1,15 +1,8 @@
 #' Simulation tests
 #'
-#' Examine parameter recovery and performance using simulated data
+#' Examine parameter recovery and performance using simulated data through parallelization
 #'
-#' @param n_person integer indicating the number of people
-#' @param n_item integer or vector of length `[n_block]` indicating the number of items for each block
-#' @param n_neg integer or vector of length `[n_block]` indicating the number of negatively-keyed items for each block
-#' @param n_block integer indicating the number of blocks
-#' @param n_dim integer indicating the number of dimensions or traits
-#' @param n_iter integer indicating the number of MCMC iterations
-#' @param n_burnin integer indicating the number of MCMC burn-ins
-#' @param step_size_sd double indicating the step size of new parameter generation for random-walk Metropolis step
+#' @param icondition integer indicating the iteration of simulation condition
 #'
 #' @param tirt boolean indicating whether estimation results should be compared with the thurstonianIRT package
 #' @param seed random seed
@@ -18,37 +11,69 @@
 #'
 #' @examples
 #' \dontrun{
-#' sim_test(n_person = 10,
-#'          n_item   = 4,
-#'          n_neg    = 1,
-#'          n_block  = 2,
-#'          n_dim    = 4,
-#'          n_iter   = 100,
-#'          n_burnin = 1,
-#'          step_size_sd = 0.1,
-#'          tirt     = TRUE,
-#'          seed     = 20220414)
 #'
+#' # load parallel package
+#' library(parallel)
+#'
+#' # Simulation conditions
+#' n_person      <- 2
+#' n_item        <- 4
+#' n_neg         <- 1
+#' n_block       <- 5
+#' n_dim         <- c(4, 6)
+#' n_iter        <- 100
+#' n_burnin      <- 20
+#' step_size_sd  <- 0.1
+#'
+#' condition_mat <- expand.grid(n_person = n_person,
+#'                              n_item   = n_item,
+#'                              n_neg    = n_neg,
+#'                              n_block  = n_block,
+#'                              n_dim    = n_dim,
+#'                              n_iter   = n_iter,
+#'                              n_burnin = n_burnin,
+#'                              step_size_sd = step_size_sd)
+#'
+#' n_condition   <- nrow(condition_mat)
+#'
+#' # create clusters
+#' n_core <- detectCores()
+#' cl     <- makeCluster(n_core)
+#' RNGkind("L'Ecuyer-CMRG")
+#'
+#' # load libraries in clusters
+#' clusterEvalQ(cl, library(thirt))
+#' clusterExport(cl, condition_mat)
+#'
+#' # simulation tests
+#' parLapply(cl, 1:n_condition, sim_test))
+#'
+#' # stop cluster
+#' stopCluster(cl)
 #' }
+#'
 #'
 #' @importFrom thurstonianIRT
 #'             fit_TIRT_stan
 #'             fit_TIRT_lavaan
 #'
 #' @export
-sim_test <- function(n_person,
-                     n_item,
-                     n_neg,
-                     n_block,
-                     n_dim,
-                     n_iter,
-                     n_burnin,
-                     step_size_sd,
-                     tirt = FALSE,
-                     seed = 20220414){
+sim_test <- function(icondition,
+                     tirt = TRUE,
+                     seed = 20220415){
 
   # set seed for reproducibility
   set.seed(seed)
+
+  # pull important parameters
+  n_person     <- condition_mat[icondition, "n_person"]
+  n_neg        <- condition_mat[icondition, "n_neg"]
+  n_block      <- condition_mat[icondition, "n_block"]
+  n_item       <- rep(condition_mat[icondition, "n_item"], n_block)
+  n_dim        <- condition_mat[icondition, "n_dim"]
+  n_iter       <- condition_mat[icondition, "n_iter"]
+  n_burnin     <- condition_mat[icondition, "n_burnin"]
+  step_size_sd <- condition_mat[icondition, "step_size_sd"]
 
   # simulate parameters and responses
   params <- simulate_thirt_params(n_person = n_person,

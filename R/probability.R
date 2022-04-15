@@ -473,7 +473,6 @@ join_pair <- function(df, resp, col) {
   return(paste0(df[which(df$id == resp),][col[1]], "-", df[which(df$id == resp),][col[2]]))
 }
 
-#' @rdname p_thirtC
 #' @export
 p_thirtC <- function(gamma, items, persons, picked_order = NULL) {
 

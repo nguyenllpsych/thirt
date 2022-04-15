@@ -35,7 +35,8 @@ Suggests:
     covr,
     knitr (>= 1.20),
     markdown (>= 1.1),
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    parallel
 LinkingTo: 
     Rcpp
 VignetteBuilder: 

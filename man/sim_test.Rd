@@ -4,35 +4,10 @@
 \alias{sim_test}
 \title{Simulation tests}
 \usage{
-sim_test(
-  n_person,
-  n_item,
-  n_neg,
-  n_block,
-  n_dim,
-  n_iter,
-  n_burnin,
-  step_size_sd,
-  tirt = FALSE,
-  seed = 20220414
-)
+sim_test(icondition, tirt = TRUE, seed = 20220415)
 }
 \arguments{
-\item{n_person}{integer indicating the number of people}
-
-\item{n_item}{integer or vector of length \verb{[n_block]} indicating the number of items for each block}
-
-\item{n_neg}{integer or vector of length \verb{[n_block]} indicating the number of negatively-keyed items for each block}
-
-\item{n_block}{integer indicating the number of blocks}
-
-\item{n_dim}{integer indicating the number of dimensions or traits}
-
-\item{n_iter}{integer indicating the number of MCMC iterations}
-
-\item{n_burnin}{integer indicating the number of MCMC burn-ins}
-
-\item{step_size_sd}{double indicating the step size of new parameter generation for random-walk Metropolis step}
+\item{icondition}{integer indicating the iteration of simulation condition}
 
 \item{tirt}{boolean indicating whether estimation results should be compared with the thurstonianIRT package}
 
@@ -42,21 +17,50 @@ sim_test(
 save a timestamped RData file in the current working directory
 }
 \description{
-Examine parameter recovery and performance using simulated data
+Examine parameter recovery and performance using simulated data through parallelization
 }
 \examples{
 \dontrun{
-sim_test(n_person = 10,
-         n_item   = 4,
-         n_neg    = 1,
-         n_block  = 2,
-         n_dim    = 4,
-         n_iter   = 100,
-         n_burnin = 1,
-         step_size_sd = 0.1,
-         tirt     = TRUE,
-         seed     = 20220414)
 
+# load parallel package
+library(parallel)
+
+# Simulation conditions
+n_person      <- 2
+n_item        <- 4
+n_neg         <- 1
+n_block       <- 5
+n_dim         <- c(4, 6)
+n_iter        <- 100
+n_burnin      <- 20
+step_size_sd  <- 0.1
+
+condition_mat <- expand.grid(n_person = n_person,
+                             n_item   = n_item,
+                             n_neg    = n_neg,
+                             n_block  = n_block,
+                             n_dim    = n_dim,
+                             n_iter   = n_iter,
+                             n_burnin = n_burnin,
+                             step_size_sd = step_size_sd)
+
+n_condition   <- nrow(condition_mat)
+
+# create clusters
+n_core <- detectCores()
+cl     <- makeCluster(n_core)
+RNGkind("L'Ecuyer-CMRG")
+
+# load libraries in clusters
+clusterEvalQ(cl, library(thirt))
+clusterExport(cl, condition_mat)
+
+# simulation tests
+parLapply(cl, 1:n_condition, sim_test))
+
+# stop cluster
+stopCluster(cl)
 }
+
 
 }
