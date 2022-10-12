@@ -53,13 +53,13 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">estimate_thirt_params_mcmc</span><span class="op">(</span>
-  <span class="va">resp</span>,
-  <span class="va">items</span>,
-  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,
-  initial_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,
-  fixed_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">estimate_thirt_params_mcmc</span><span class="op">(</span></span>
+<span>  <span class="va">resp</span>,</span>
+<span>  <span class="va">items</span>,</span>
+<span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  initial_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  fixed_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -70,27 +70,41 @@ variable <code>person</code> of the format <code>p</code> for person number <cod
 variable <code>block</code> of the format <code>b</code> for block number <code>b</code>,
 variable <code>resp</code> of the format <code>r</code> for response number <code>r</code>
 which corresponds to mupp::find_permutation_index().</p></dd>
+
+
 <dt>items</dt>
 <dd><p>a data.frame of length <code>[total items]</code> with five variables:
 variable <code>item</code> of the format <code>i</code> for item number <code>i</code>,
 variable <code>block</code> of the format <code>b</code> for block number <code>b</code>,
 variable <code>dim</code> of the format <code>d</code> for dimension number <code>d</code>,
 variable <code>key</code> with -1 for negatively- and 1 for positively-keyed items.</p></dd>
+
+
 <dt>control</dt>
 <dd><p>a list of three parameters to control the MCMC algorithm:
 <code>n_iter</code> for the number of iterations,
 <code>n_burnin</code> for the number of burn-ins,
-<code>step_size_sd</code> for the step size of new parameter generation.</p></dd>
+<code>step_size_sd</code> for the step size of new parameter generation,
+either one value for all 4 parameters,
+or a vector of 4 values in the following order:
+theta, gamma, lambda, psisq</p></dd>
+
+
 <dt>initial_params</dt>
 <dd><p>a list of initial parameters to start the algorithm,
 each parameter needs to be a matrix.</p></dd>
+
+
 <dt>fixed_params</dt>
 <dd><p>a list of fixed parameters to be excluded from estimation,
 each parameter needs to be a matrix.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>a list of three objects:
+    
+
+<p>a list of three objects:
 <code>all_iters</code> is a list of length <code>[n_iter]</code> for parameter estimates for all iterations,
 <code>mean_mcmc</code> is a list of length 4 for mean of four parameters after burn-ins,
 <code>sd_mcmc</code> is a list of length 4 for SD of four parameters after burn-ins.</p>
@@ -98,50 +112,50 @@ each parameter needs to be a matrix.</p></dd>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">202108</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># designs</span></span>
-<span class="r-in"><span class="va">n_person</span>      <span class="op">&lt;-</span> <span class="fl">100</span></span>
-<span class="r-in"><span class="va">n_item</span>        <span class="op">&lt;-</span> <span class="fl">4</span></span>
-<span class="r-in"><span class="va">n_neg</span>         <span class="op">&lt;-</span> <span class="fl">2</span></span>
-<span class="r-in"><span class="va">n_block</span>       <span class="op">&lt;-</span> <span class="fl">4</span></span>
-<span class="r-in"><span class="va">n_dim</span>         <span class="op">&lt;-</span> <span class="fl">4</span></span>
-<span class="r-in"><span class="va">n_iter</span>        <span class="op">&lt;-</span> <span class="fl">5000</span></span>
-<span class="r-in"><span class="va">n_burnin</span>      <span class="op">&lt;-</span> <span class="fl">200</span></span>
-<span class="r-in"><span class="va">step_size_sd</span>  <span class="op">&lt;-</span> <span class="fl">0.1</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># simulate parameters</span></span>
-<span class="r-in"><span class="va">params</span> <span class="op">&lt;-</span> <span class="fu"><a href="simulate_thirt_params.html">simulate_thirt_params</a></span><span class="op">(</span>n_person <span class="op">=</span> <span class="va">n_person</span>,</span>
-<span class="r-in">                                n_item   <span class="op">=</span> <span class="va">n_item</span>,</span>
-<span class="r-in">                                n_neg    <span class="op">=</span> <span class="va">n_neg</span>,</span>
-<span class="r-in">                                n_block  <span class="op">=</span> <span class="va">n_block</span>,</span>
-<span class="r-in">                                n_dim    <span class="op">=</span> <span class="va">n_dim</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">resp</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">simulate_thirt_resp</span>, <span class="va">params</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">gamma</span>  <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">gamma</span><span class="op">$</span><span class="va">gamma</span></span>
-<span class="r-in"><span class="va">lambda</span> <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">items</span><span class="op">$</span><span class="va">lambda</span></span>
-<span class="r-in"><span class="va">psisq</span>  <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">items</span><span class="op">$</span><span class="va">psisq</span></span>
-<span class="r-in"><span class="va">theta</span>  <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">persons</span><span class="op">[</span>, <span class="op">-</span><span class="fl">1</span><span class="op">]</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># estimation output</span></span>
-<span class="r-in"><span class="va">start_mcmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">output</span>     <span class="op">&lt;-</span> <span class="fu">estimate_thirt_params_mcmc</span><span class="op">(</span>resp  <span class="op">=</span> <span class="va">resp</span><span class="op">$</span><span class="va">resp</span>,</span>
-<span class="r-in">                                         items <span class="op">=</span> <span class="va">resp</span><span class="op">$</span><span class="va">items</span>,</span>
-<span class="r-in">                                         control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>n_iter   <span class="op">=</span> <span class="va">n_iter</span>,</span>
-<span class="r-in">                                                        n_burnin <span class="op">=</span> <span class="va">n_burnin</span>,</span>
-<span class="r-in">                                                        step_size_sd <span class="op">=</span> <span class="va">step_size_sd</span><span class="op">)</span>,</span>
-<span class="r-in">                                         fixed_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>psisq <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">psisq</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"><span class="op">)</span></span>
-<span class="r-in"><span class="va">end_mcmc</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"><span class="co">#'</span></span>
-<span class="r-in"><span class="co"># correlate estimated and true parameters</span></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">theta</span>, <span class="va">output</span><span class="op">$</span><span class="va">mean_mcmc</span><span class="op">$</span><span class="va">theta</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">gamma</span>, <span class="va">output</span><span class="op">$</span><span class="va">mean_mcmc</span><span class="op">$</span><span class="va">gamma</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">lambda</span>, <span class="va">output</span><span class="op">$</span><span class="va">mean_mcmc</span><span class="op">$</span><span class="va">lambda</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">psisq</span>, <span class="va">output</span><span class="op">$</span><span class="va">mean_mcmc</span><span class="op">$</span><span class="va">psisq</span><span class="op">)</span></span>
-<span class="r-in"><span class="op">(</span><span class="va">time_mcmc</span> <span class="op">&lt;-</span> <span class="va">end_mcmc</span> <span class="op">-</span> <span class="va">start_mcmc</span><span class="op">)</span></span>
-<span class="r-in"><span class="op">}</span></span>
-<span class="r-in"></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">202108</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># designs</span></span></span>
+<span class="r-in"><span><span class="va">n_person</span>      <span class="op">&lt;-</span> <span class="fl">100</span></span></span>
+<span class="r-in"><span><span class="va">n_item</span>        <span class="op">&lt;-</span> <span class="fl">4</span></span></span>
+<span class="r-in"><span><span class="va">n_neg</span>         <span class="op">&lt;-</span> <span class="fl">2</span></span></span>
+<span class="r-in"><span><span class="va">n_block</span>       <span class="op">&lt;-</span> <span class="fl">4</span></span></span>
+<span class="r-in"><span><span class="va">n_dim</span>         <span class="op">&lt;-</span> <span class="fl">4</span></span></span>
+<span class="r-in"><span><span class="va">n_iter</span>        <span class="op">&lt;-</span> <span class="fl">5000</span></span></span>
+<span class="r-in"><span><span class="va">n_burnin</span>      <span class="op">&lt;-</span> <span class="fl">200</span></span></span>
+<span class="r-in"><span><span class="va">step_size_sd</span>  <span class="op">&lt;-</span> <span class="fl">0.1</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># simulate parameters</span></span></span>
+<span class="r-in"><span><span class="va">params</span> <span class="op">&lt;-</span> <span class="fu"><a href="simulate_thirt_params.html">simulate_thirt_params</a></span><span class="op">(</span>n_person <span class="op">=</span> <span class="va">n_person</span>,</span></span>
+<span class="r-in"><span>                                n_item   <span class="op">=</span> <span class="va">n_item</span>,</span></span>
+<span class="r-in"><span>                                n_neg    <span class="op">=</span> <span class="va">n_neg</span>,</span></span>
+<span class="r-in"><span>                                n_block  <span class="op">=</span> <span class="va">n_block</span>,</span></span>
+<span class="r-in"><span>                                n_dim    <span class="op">=</span> <span class="va">n_dim</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">resp</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">simulate_thirt_resp</span>, <span class="va">params</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">gamma</span>  <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">gamma</span><span class="op">$</span><span class="va">gamma</span></span></span>
+<span class="r-in"><span><span class="va">lambda</span> <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">items</span><span class="op">$</span><span class="va">lambda</span></span></span>
+<span class="r-in"><span><span class="va">psisq</span>  <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">items</span><span class="op">$</span><span class="va">psisq</span></span></span>
+<span class="r-in"><span><span class="va">theta</span>  <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">persons</span><span class="op">[</span>, <span class="op">-</span><span class="fl">1</span><span class="op">]</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># estimation output</span></span></span>
+<span class="r-in"><span><span class="va">start_mcmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">output</span>     <span class="op">&lt;-</span> <span class="fu">estimate_thirt_params_mcmc</span><span class="op">(</span>resp  <span class="op">=</span> <span class="va">resp</span><span class="op">$</span><span class="va">resp</span>,</span></span>
+<span class="r-in"><span>                                         items <span class="op">=</span> <span class="va">resp</span><span class="op">$</span><span class="va">items</span>,</span></span>
+<span class="r-in"><span>                                         control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>n_iter   <span class="op">=</span> <span class="va">n_iter</span>,</span></span>
+<span class="r-in"><span>                                                        n_burnin <span class="op">=</span> <span class="va">n_burnin</span>,</span></span>
+<span class="r-in"><span>                                                        step_size_sd <span class="op">=</span> <span class="va">step_size_sd</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                                         fixed_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>psisq <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">psisq</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">end_mcmc</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co">#'</span></span></span>
+<span class="r-in"><span><span class="co"># correlate estimated and true parameters</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">theta</span>, <span class="va">output</span><span class="op">$</span><span class="va">mean_mcmc</span><span class="op">$</span><span class="va">theta</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">gamma</span>, <span class="va">output</span><span class="op">$</span><span class="va">mean_mcmc</span><span class="op">$</span><span class="va">gamma</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">lambda</span>, <span class="va">output</span><span class="op">$</span><span class="va">mean_mcmc</span><span class="op">$</span><span class="va">lambda</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">psisq</span>, <span class="va">output</span><span class="op">$</span><span class="va">mean_mcmc</span><span class="op">$</span><span class="va">psisq</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">(</span><span class="va">time_mcmc</span> <span class="op">&lt;-</span> <span class="va">end_mcmc</span> <span class="op">-</span> <span class="va">start_mcmc</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -156,7 +170,7 @@ each parameter needs to be a matrix.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

@@ -53,7 +53,7 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">loglik_thirt</span><span class="op">(</span><span class="va">gamma</span>, <span class="va">items</span>, <span class="va">persons</span>, <span class="va">resp</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">loglik_thirt</span><span class="op">(</span><span class="va">gamma</span>, <span class="va">items</span>, <span class="va">persons</span>, <span class="va">resp</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -62,6 +62,8 @@
 <dd><p>a data.frame of length <code>[total binary outcomes]</code> with two variables:
 variable <code>pair</code> of the format <code>i-j</code> for item pair <code>ij</code>,
 variable <code>gamma</code> for threshold parameters.</p></dd>
+
+
 <dt>items</dt>
 <dd><p>a data.frame of length <code>[total items]</code> with five variables:
 variable <code>item</code> of the format <code>i</code> for item number <code>i</code>,
@@ -70,39 +72,46 @@ variable <code>dim</code> of the format <code>d</code> for dimension number <cod
 variable <code>lambda</code> for loadings,
 variable <code>psisq</code> for uniqueness,
 variable <code>dim</code> for dimensions.</p></dd>
+
+
 <dt>persons</dt>
 <dd><p>a data.frame of length <code>[number of people]</code> with variables:
 variable <code>person</code> of the format <code>p</code> for person number <code>p</code>,
 variables named <code>theta_d</code> for dimension number <code>d</code>.</p></dd>
+
+
 <dt>resp</dt>
 <dd><p>a data.frame of length <code>[n_person x n_block]</code> with at least three first variables:
 variable <code>person</code> of the format <code>p</code> for person number <code>p</code>,
 variable <code>block</code> of the format <code>b</code> for block number <code>b</code>,
 variable <code>resp</code> of the format <code>r</code> for response number <code>r</code>
 which corresponds to mupp::find_permutation_index().</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>a matrix of dimensions <code>[n_person X n_block]</code> of log-likelihoods
+    
+
+<p>a matrix of dimensions <code>[n_person X n_block]</code> of log-likelihoods
 of chosen responses for each person for each block.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"></span>
-<span class="r-in"><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">202106</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">params</span>   <span class="op">&lt;-</span> <span class="fu"><a href="simulate_thirt_params.html">simulate_thirt_params</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">gamma</span>    <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">gamma</span></span>
-<span class="r-in"><span class="va">items</span>    <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">items</span></span>
-<span class="r-in"><span class="va">persons</span>  <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">persons</span></span>
-<span class="r-in"><span class="va">resp</span>     <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">simulate_thirt_resp</span>, <span class="va">params</span><span class="op">)</span><span class="op">$</span><span class="va">resp</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="fu">loglik_thirt</span><span class="op">(</span>gamma <span class="op">=</span> <span class="va">gamma</span>, items <span class="op">=</span> <span class="va">items</span>, persons <span class="op">=</span> <span class="va">persons</span>, resp <span class="op">=</span> <span class="va">resp</span><span class="op">)</span></span>
-<span class="r-in"><span class="op">}</span></span>
-<span class="r-in"></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">202106</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">params</span>   <span class="op">&lt;-</span> <span class="fu"><a href="simulate_thirt_params.html">simulate_thirt_params</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">gamma</span>    <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">gamma</span></span></span>
+<span class="r-in"><span><span class="va">items</span>    <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">items</span></span></span>
+<span class="r-in"><span><span class="va">persons</span>  <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">persons</span></span></span>
+<span class="r-in"><span><span class="va">resp</span>     <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">simulate_thirt_resp</span>, <span class="va">params</span><span class="op">)</span><span class="op">$</span><span class="va">resp</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu">loglik_thirt</span><span class="op">(</span>gamma <span class="op">=</span> <span class="va">gamma</span>, items <span class="op">=</span> <span class="va">items</span>, persons <span class="op">=</span> <span class="va">persons</span>, resp <span class="op">=</span> <span class="va">resp</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -117,7 +126,7 @@ of chosen responses for each person for each block.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>
