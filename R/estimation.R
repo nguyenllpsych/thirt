@@ -13,7 +13,10 @@
 #' @param control a list of three parameters to control the MCMC algorithm:
 #'                `n_iter` for the number of iterations,
 #'                `n_burnin` for the number of burn-ins,
-#'                `step_size_sd` for the step size of new parameter generation.
+#'                `step_size_sd` for the step size of new parameter generation,
+#'                               either one value for all 4 parameters,
+#'                               or a vector of 4 values in the following order:
+#'                               theta, gamma, lambda, psisq
 #' @param initial_params a list of initial parameters to start the algorithm,
 #'                       each parameter needs to be a matrix.
 #' @param fixed_params a list of fixed parameters to be excluded from estimation,
@@ -97,10 +100,13 @@ estimate_thirt_params_mcmc <- function(resp,
            key        = items$key),
          envir = mcmc_envir)
 
+  # rep step_size_sd if only 1 input
+  control$step_size_sd <- rep_len(control$step_size_sd, 4)
+
   # default controls
   control_default <- list(n_iter       = 10000,
                           n_burnin     = 1000,
-                          step_size_sd = 0.1)
+                          step_size_sd = rep(0.1, 4))
   assign(x     = "control",
          value = modifyList(x   = control_default,
                             val = control),
@@ -237,8 +243,16 @@ update_thirt_psisq_mcmc  <- function(envir) {
 update_thirt_params_mcmc <- function(envir,
                                      params_name = "gamma") {
 
+  # specify step size depending on parameter
+  if(params_name == "gamma"){
+    step_size_sd <- envir$control$step_size_sd[2]
+  } else if(params_name == "lambda") {
+    step_size_sd <- envir$control$step_size_sd[3]
+  } else if(params_name == "psisq") {
+    step_size_sd <- envir$control$step_size_sd[4]
+  }
+
   # generate new item params
-  step_size_sd  <- envir$control$step_size_sd
   params_old    <- envir$arguments[[params_name]]
   params_new    <- apply(X   = params_old,
                          FUN = function(x) {
@@ -332,7 +346,7 @@ update_thirt_params_mcmc <- function(envir,
 update_thirt_theta_mcmc <- function(envir) {
 
   # generate new thetas
-  step_size_sd <- envir$control$step_size_sd
+  step_size_sd <- envir$control$step_size_sd[1]
   thetas_old   <- envir$arguments$theta
   thetas_new   <- apply(X   = thetas_old,
                         FUN = function(x) {

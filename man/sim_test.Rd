@@ -53,10 +53,10 @@ RNGkind("L'Ecuyer-CMRG")
 
 # load libraries in clusters
 clusterEvalQ(cl, library(thirt))
-clusterExport(cl, condition_mat)
+clusterExport(cl, "condition_mat")
 
 # simulation tests
-parLapply(cl, 1:n_condition, sim_test))
+parLapply(cl, 1:n_condition, sim_test)
 
 # stop cluster
 stopCluster(cl)

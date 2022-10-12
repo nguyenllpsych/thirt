@@ -28,7 +28,10 @@ variable \code{key} with -1 for negatively- and 1 for positively-keyed items.}
 \item{control}{a list of three parameters to control the MCMC algorithm:
 \code{n_iter} for the number of iterations,
 \code{n_burnin} for the number of burn-ins,
-\code{step_size_sd} for the step size of new parameter generation.}
+\code{step_size_sd} for the step size of new parameter generation,
+either one value for all 4 parameters,
+or a vector of 4 values in the following order:
+theta, gamma, lambda, psisq}
 
 \item{initial_params}{a list of initial parameters to start the algorithm,
 each parameter needs to be a matrix.}

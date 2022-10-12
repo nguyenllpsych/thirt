@@ -43,10 +43,10 @@
 #'
 #' # load libraries in clusters
 #' clusterEvalQ(cl, library(thirt))
-#' clusterExport(cl, condition_mat)
+#' clusterExport(cl, "condition_mat")
 #'
 #' # simulation tests
-#' parLapply(cl, 1:n_condition, sim_test))
+#' parLapply(cl, 1:n_condition, sim_test)
 #'
 #' # stop cluster
 #' stopCluster(cl)
@@ -124,19 +124,31 @@ sim_test <- function(icondition,
     end_lavaan   <- Sys.time()
     time_lavaan  <- end_lavaan - start_lavaan
 
+    # thurstonianIRT fit mplus
+    start_mplus <- Sys.time()
+    try <- try(fit_TIRT_mplus(TIRT_data))
+    if(class(try) != "try-error") {
+      TIRT_mplus <- try
+    } else {
+      TIRT_mplus <- "error"
+    }
+    end_mplus   <- Sys.time()
+    time_mplus  <- end_mplus - start_mplus
+
     # save info
     save(n_person, n_item, n_neg, n_block, n_dim,
          n_iter, n_burnin, step_size_sd,
          params, output, count_accept, time_mcmc,
          time_stan, TIRT_stan,
          time_lavaan, TIRT_lavaan,
-         file = paste0("sim_", as.numeric(Sys.time()),".RData"))
+         time_mplus, TIRT_mplus,
+         file = paste0("sim_", round(as.numeric(Sys.time()), 0),".RData"))
   } else {
     # save thirt-only info
     save(n_person, n_item, n_neg, n_block, n_dim,
          n_iter, n_burnin, step_size_sd,
          params, output, count_accept, time_mcmc,
-         file = paste0("sim_", as.numeric(Sys.time()),".RData"))
+         file = paste0("sim_", round(as.numeric(Sys.time()), 0),".RData"))
   }
 }
 
