@@ -53,7 +53,7 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sim_test</span><span class="op">(</span><span class="va">icondition</span>, tirt <span class="op">=</span> <span class="cn">TRUE</span>, seed <span class="op">=</span> <span class="fl">20220415</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sim_test</span><span class="op">(</span><span class="va">icondition</span>, stan <span class="op">=</span> <span class="cn">TRUE</span>, sem <span class="op">=</span> <span class="cn">TRUE</span>, seed <span class="op">=</span> <span class="fl">20220415</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -62,8 +62,12 @@
 <dd><p>integer indicating the iteration of simulation condition</p></dd>
 
 
-<dt>tirt</dt>
-<dd><p>boolean indicating whether estimation results should be compared with the thurstonianIRT package</p></dd>
+<dt>stan</dt>
+<dd><p>boolean indicating whether estimation results should be compared with thurstonianIRT stan</p></dd>
+
+
+<dt>sem</dt>
+<dd><p>boolean indicating whether estimation results should be compared with thurstonianIRT lavaan and mplus</p></dd>
 
 
 <dt>seed</dt>
