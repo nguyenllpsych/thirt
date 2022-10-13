@@ -4,7 +4,8 @@
 #'
 #' @param icondition integer indicating the iteration of simulation condition
 #'
-#' @param tirt boolean indicating whether estimation results should be compared with the thurstonianIRT package
+#' @param stan boolean indicating whether estimation results should be compared with thurstonianIRT stan
+#' @param sem boolean indicating whether estimation results should be compared with thurstonianIRT lavaan and mplus
 #' @param seed random seed
 #'
 #' @return save a timestamped RData file in the current working directory
@@ -59,7 +60,8 @@
 #'
 #' @export
 sim_test <- function(icondition,
-                     tirt = TRUE,
+                     stan = TRUE,
+                     sem = TRUE,
                      seed = 20220415){
 
   # set seed for reproducibility
@@ -73,7 +75,7 @@ sim_test <- function(icondition,
   n_dim        <- condition_mat[icondition, "n_dim"]
   n_iter       <- condition_mat[icondition, "n_iter"]
   n_burnin     <- condition_mat[icondition, "n_burnin"]
-  step_size_sd <- condition_mat[icondition, "step_size_sd"]
+  step_size_sd <- unlist(condition_mat[icondition, "step_size_sd"])
 
   # simulate parameters and responses
   params <- simulate_thirt_params(n_person = n_person,
@@ -100,7 +102,7 @@ sim_test <- function(icondition,
                                resp      = resp)
 
   # compare with thurstonianIRT
-  if(tirt) {
+  if(stan && sem) {
 
     # restructure data for thurstonianIRT
     TIRT_data <- convert_TIRT(resp)
@@ -140,6 +142,57 @@ sim_test <- function(icondition,
          n_iter, n_burnin, step_size_sd,
          params, output, count_accept, time_mcmc,
          time_stan, TIRT_stan,
+         time_lavaan, TIRT_lavaan,
+         time_mplus, TIRT_mplus,
+         file = paste0("sim_", round(as.numeric(Sys.time()), 0),".RData"))
+  } else if(stan) {
+    # restructure data for thurstonianIRT
+    TIRT_data <- convert_TIRT(resp)
+
+    # thurstonianIRT fit stan
+    start_stan <- Sys.time()
+    TIRT_stan  <- fit_TIRT_stan(TIRT_data, chains = 1,
+                                iter = n_iter,
+                                warmup = n_burnin)
+    end_stan   <- Sys.time()
+    time_stan  <- end_stan - start_stan
+
+    # save info
+    save(n_person, n_item, n_neg, n_block, n_dim,
+         n_iter, n_burnin, step_size_sd,
+         params, output, count_accept, time_mcmc,
+         time_stan, TIRT_stan,
+         file = paste0("sim_", round(as.numeric(Sys.time()), 0),".RData"))
+  } else if(sem) {
+    # restructure data for thurstonianIRT
+    TIRT_data <- convert_TIRT(resp)
+
+    # thurstonianIRT fit lavaan
+    start_lavaan <- Sys.time()
+    try <- try(fit_TIRT_lavaan(TIRT_data))
+    if(class(try) != "try-error") {
+      TIRT_lavaan <- try
+    } else {
+      TIRT_lavaan <- "error"
+    }
+    end_lavaan   <- Sys.time()
+    time_lavaan  <- end_lavaan - start_lavaan
+
+    # thurstonianIRT fit mplus
+    start_mplus <- Sys.time()
+    try <- try(fit_TIRT_mplus(TIRT_data))
+    if(class(try) != "try-error") {
+      TIRT_mplus <- try
+    } else {
+      TIRT_mplus <- "error"
+    }
+    end_mplus   <- Sys.time()
+    time_mplus  <- end_mplus - start_mplus
+
+    # save info
+    save(n_person, n_item, n_neg, n_block, n_dim,
+         n_iter, n_burnin, step_size_sd,
+         params, output, count_accept, time_mcmc,
          time_lavaan, TIRT_lavaan,
          time_mplus, TIRT_mplus,
          file = paste0("sim_", round(as.numeric(Sys.time()), 0),".RData"))

@@ -4,12 +4,14 @@
 \alias{sim_test}
 \title{Simulation tests}
 \usage{
-sim_test(icondition, tirt = TRUE, seed = 20220415)
+sim_test(icondition, stan = TRUE, sem = TRUE, seed = 20220415)
 }
 \arguments{
 \item{icondition}{integer indicating the iteration of simulation condition}
 
-\item{tirt}{boolean indicating whether estimation results should be compared with the thurstonianIRT package}
+\item{stan}{boolean indicating whether estimation results should be compared with thurstonianIRT stan}
+
+\item{sem}{boolean indicating whether estimation results should be compared with thurstonianIRT lavaan and mplus}
 
 \item{seed}{random seed}
 }
