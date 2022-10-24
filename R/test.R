@@ -159,6 +159,8 @@ sim_test <- function(icondition,
 
     # save info
     save(n_person, n_item, n_neg, n_block, n_dim,
+         n_iter, n_burnin, step_size_sd,
+         params, output, count_accept, time_mcmc,
          time_stan, TIRT_stan,
          file = paste0("sim_", round(as.numeric(Sys.time()), 0),".RData"))
   } else if(sem) {
@@ -189,6 +191,8 @@ sim_test <- function(icondition,
 
     # save info
     save(n_person, n_item, n_neg, n_block, n_dim,
+         n_iter, n_burnin, step_size_sd,
+         params, output, count_accept, time_mcmc,
          time_lavaan, TIRT_lavaan,
          time_mplus, TIRT_mplus,
          file = paste0("sim_", round(as.numeric(Sys.time()), 0),".RData"))
