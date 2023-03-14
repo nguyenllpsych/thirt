@@ -106,7 +106,10 @@ estimate_thirt_params_mcmc <- function(resp,
   # default controls
   control_default <- list(n_iter       = 10000,
                           n_burnin     = 1000,
-                          step_size_sd = rep(0.1, 4))
+                          step_size_sd = c(0.5,   # theta,
+                                           0.01,  # gamma,
+                                           0.01,  # lambda,
+                                           0.075))# psisq
   assign(x     = "control",
          value = modifyList(x   = control_default,
                             val = control),
