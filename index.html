@@ -71,6 +71,159 @@
 <div class="page-header"><h1 id="thirt">thirt<a class="anchor" aria-label="anchor" href="#thirt"></a>
 </h1></div>
 <!-- badges: start -->
+<!-- badges: end --><div class="section level3">
+<h3 id="an-r-packages-for-the-thurstonian-item-response-theory-model">An R Packages for the Thurstonian Item Response Theory model<a class="anchor" aria-label="anchor" href="#an-r-packages-for-the-thurstonian-item-response-theory-model"></a>
+</h3>
+<p>The <code>thirt</code> package contains functions designed to simulation data that for forced-choice questionnaires under the Thurstonian Item Response Theory model and to estimate person- and item-parameters using an MCMC algorithm.</p>
+<p>The package homepage is currently hosted <a href="https://nguyenllpsych.github.io/thirt/index.html" class="external-link">here</a>.</p>
+</div>
+<div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
+<p>The package is hosted on <a href="https://www.github.com/nguyenllpsych/thirt" class="external-link">GitHub</a> and the latest development version can be installed by running this code within an R session:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"nguyenllpsych/thirt"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="help">Help<a class="anchor" aria-label="anchor" href="#help"></a>
+</h2>
+<p>Take a look at the help pages for <code>simulate_thirt_params</code>, <code>simulate_thirt_resp</code>, and <code>estimate_thirt_params_mcmc</code> for more information.</p>
+</div>
+<div class="section level2">
+<h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
+</h2>
+<div class="section level3">
+<h3 id="parameter-and-response-simulation">Parameter and Response Simulation<a class="anchor" aria-label="anchor" href="#parameter-and-response-simulation"></a>
+</h3>
+<p>We can first simulate the person-parameter <span class="math inline"><em>θ</em></span> and item-parameters <span class="math inline"><em>λ</em>, <em>γ</em>, <em>ψ</em><sup>2</sup></span> given a specific test design. The test conditions that can be adjusted are: the number of respondents, the number of items per question block, the number of negatively keyed items per block (i.e., items with negative loadings <span class="math inline"><em>λ</em></span>), the number of question blocks, and the number of dimensions or traits that are being measured.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># load the package</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://nguyenllpsych.github.io/thirt" class="external-link">thirt</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># set seed for reproducibility</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2022</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>digits <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># specify test conditions</span></span>
+<span><span class="va">params</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/simulate_thirt_params.html">simulate_thirt_params</a></span> <span class="op">(</span></span>
+<span>  n_person <span class="op">=</span> <span class="fl">2</span>,  <span class="co"># number of respondents</span></span>
+<span>  n_item   <span class="op">=</span> <span class="fl">3</span>,  <span class="co"># number of items per block</span></span>
+<span>  n_neg    <span class="op">=</span> <span class="fl">1</span>,  <span class="co"># number of negatively keyed items per block</span></span>
+<span>  n_block  <span class="op">=</span> <span class="fl">2</span>,  <span class="co"># number of question blocks</span></span>
+<span>  n_dim    <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>  <span class="co"># number of dimensions or traits being measured</span></span></code></pre></div>
+<p>Due to the differing structures across parameters, the <code><a href="reference/simulate_thirt_params.html">simulate_thirt_params()</a></code> function generates three separate dataframes:</p>
+<ul>
+<li><p><code>gamma</code> dataframe for <span class="math inline"><em>γ</em></span>: each row corresponds to an item pair within a block. For instance row 4 below shows the item threshold parameter between the first two items of the second question block.</p></li>
+<li><p><code>items</code> dataframe for <span class="math inline"><em>λ</em></span> and <span class="math inline"><em>ψ</em><sup>2</sup></span>: each row corresponds to an individual item within a block. For instance, row 1 below shows the item loading and unique variance for the first item in the first block, which measures the second dimension.</p></li>
+<li><p><code>persons</code> dataframe for <span class="math inline"><em>θ</em></span>: each row corresponds to an individual respondent. For instance, row 1 below shows the first respondent’s latent trait scores across the three traits measured</p></li>
+</ul>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># three output dataframes for parameters</span></span>
+<span><span class="va">params</span></span>
+<span><span class="co">#&gt; $gamma</span></span>
+<span><span class="co">#&gt;   pair block gamma</span></span>
+<span><span class="co">#&gt; 1  1-2     1  0.63</span></span>
+<span><span class="co">#&gt; 2  1-3     1 -0.76</span></span>
+<span><span class="co">#&gt; 3  2-3     1 -0.63</span></span>
+<span><span class="co">#&gt; 4  1-2     2 -0.85</span></span>
+<span><span class="co">#&gt; 5  1-3     2 -0.26</span></span>
+<span><span class="co">#&gt; 6  2-3     2 -1.00</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $items</span></span>
+<span><span class="co">#&gt;   item block dim lambda psisq</span></span>
+<span><span class="co">#&gt; 1    1     1   2  1.197  0.44</span></span>
+<span><span class="co">#&gt; 2    2     1   3  0.928  0.52</span></span>
+<span><span class="co">#&gt; 3    3     1   1 -0.765  0.10</span></span>
+<span><span class="co">#&gt; 4    1     2   1 -0.486  0.63</span></span>
+<span><span class="co">#&gt; 5    2     2   2  0.082  0.85</span></span>
+<span><span class="co">#&gt; 6    3     2   3  0.918  0.29</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $persons</span></span>
+<span><span class="co">#&gt;   person theta_1 theta_2 theta_3</span></span>
+<span><span class="co">#&gt; 1      1   -0.33   -0.19   0.093</span></span>
+<span><span class="co">#&gt; 2      2    0.19   -1.07   0.916</span></span></code></pre></div>
+<p>After we have simulated the person- and item-parameters, we can now simulate a random response pattern based on these values. The <code><a href="reference/simulate_thirt_resp.html">simulate_thirt_resp()</a></code> function takes in three input values: the three dataframes in the same structure as <code>gamma, items, persons</code>.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># simulate response patterns based on previously generated parameters</span></span>
+<span><span class="va">resp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">simulate_thirt_resp</span>, <span class="va">params</span><span class="op">)</span></span></code></pre></div>
+<p>This will generate two separate dataframes to represent the response patterns:</p>
+<ul>
+<li><p><code>items</code> dataframe: each row represents one item within a block. For instance, row 1 shows that the first item in the first block is used to measure the second dimension and that it is positively keyed (i.e., with a positive item loading <span class="math inline"><em>λ</em></span></p></li>
+<li><p><code>resp</code> dataframe: each row represents one respondent within a block. For instance, row 1 shows that, for the first question block, the first respondent ranks the second item the highest, then the third item, then the first item. This response sequence is internally coded as the fourth possible response pattern for a three-item question block. This numbering system is for internal data storing purposes and has no substantive implications.</p></li>
+</ul>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># two output dataframes for response patterns</span></span>
+<span><span class="va">resp</span></span>
+<span><span class="co">#&gt; $items</span></span>
+<span><span class="co">#&gt;   item block dim key</span></span>
+<span><span class="co">#&gt; 1    1     1   2   1</span></span>
+<span><span class="co">#&gt; 2    2     1   3   1</span></span>
+<span><span class="co">#&gt; 3    3     1   1  -1</span></span>
+<span><span class="co">#&gt; 4    1     2   1  -1</span></span>
+<span><span class="co">#&gt; 5    2     2   2   1</span></span>
+<span><span class="co">#&gt; 6    3     2   3   1</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $resp</span></span>
+<span><span class="co">#&gt;   person block resp     seq</span></span>
+<span><span class="co">#&gt; 1      1     1    4 2, 3, 1</span></span>
+<span><span class="co">#&gt; 2      2     1    4 2, 3, 1</span></span>
+<span><span class="co">#&gt; 3      1     2    1 1, 2, 3</span></span>
+<span><span class="co">#&gt; 4      2     2    3 2, 1, 3</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="parameter-estimation">Parameter Estimation<a class="anchor" aria-label="anchor" href="#parameter-estimation"></a>
+</h3>
+<p>Using the previously simulated response patterns, we can now apply the main estimation function to estimate all person- and item-parameters. In order to apply this function on real data, researchers must structure their data to follow the template of the two <code>resp</code> and <code>items</code> dataframes. In addition to these two required inputs, we may change the <code>control</code> argument to adjust the MCMC algorithm:</p>
+<ul>
+<li><p><code>n_iter</code>: the number of MCMC iterations</p></li>
+<li><p><code>n_burnin</code>: the number of burn-in MCMC iterations</p></li>
+<li><p><code>step_size_sd</code>: the step size standard deviation for the random-walk Metropolis step</p></li>
+</ul>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># estimate person- and item-parameters based on previously generated response patterns</span></span>
+<span><span class="va">estimations</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/estimate_thirt_params_mcmc.html">estimate_thirt_params_mcmc</a></span><span class="op">(</span></span>
+<span>  resp <span class="op">=</span> <span class="va">resp</span><span class="op">$</span><span class="va">resp</span>,</span>
+<span>  items <span class="op">=</span> <span class="va">resp</span><span class="op">$</span><span class="va">items</span>,</span>
+<span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>n_iter <span class="op">=</span> <span class="fl">100</span>, <span class="co"># number of iterations</span></span>
+<span>                 n_burnin <span class="op">=</span> <span class="fl">20</span>, <span class="co"># number of burn-ins</span></span>
+<span>                 step_size_sd <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span><span class="op">)</span> <span class="co"># step size SD across parameters</span></span></code></pre></div>
+<p>The estimated parameter values are computed as the mean across all iterations after the burn-in period, and they may be accessed by calling the <code>mean_mcmc</code> list object stored within the output of <code><a href="reference/estimate_thirt_params_mcmc.html">estimate_thirt_params_mcmc()</a></code>. There are four separate dataframes for the different person- and item-parameters. These parameter estimates can then be directly compared to the true simulated parameters that generated the model. We should note, however, that this illustrative example used a very simple data-generating model (with few people, items, and blocks) as well as a very short MCMC chain with only 100 iterations.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># view the estimated parameter values</span></span>
+<span><span class="va">estimations</span><span class="op">$</span><span class="va">mean_mcmc</span></span>
+<span><span class="co">#&gt; $gamma</span></span>
+<span><span class="co">#&gt;        [,1]</span></span>
+<span><span class="co">#&gt; [1,]  0.421</span></span>
+<span><span class="co">#&gt; [2,]  0.479</span></span>
+<span><span class="co">#&gt; [3,] -0.625</span></span>
+<span><span class="co">#&gt; [4,]  0.219</span></span>
+<span><span class="co">#&gt; [5,] -0.023</span></span>
+<span><span class="co">#&gt; [6,] -0.317</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $lambda</span></span>
+<span><span class="co">#&gt;       [,1]</span></span>
+<span><span class="co">#&gt; [1,]  0.62</span></span>
+<span><span class="co">#&gt; [2,]  0.42</span></span>
+<span><span class="co">#&gt; [3,] -0.81</span></span>
+<span><span class="co">#&gt; [4,] -0.88</span></span>
+<span><span class="co">#&gt; [5,]  1.01</span></span>
+<span><span class="co">#&gt; [6,]  0.55</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $psisq</span></span>
+<span><span class="co">#&gt;      [,1]</span></span>
+<span><span class="co">#&gt; [1,] 0.73</span></span>
+<span><span class="co">#&gt; [2,] 0.78</span></span>
+<span><span class="co">#&gt; [3,] 0.44</span></span>
+<span><span class="co">#&gt; [4,] 0.55</span></span>
+<span><span class="co">#&gt; [5,] 0.67</span></span>
+<span><span class="co">#&gt; [6,] 0.61</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $theta</span></span>
+<span><span class="co">#&gt;        [,1]  [,2]  [,3]</span></span>
+<span><span class="co">#&gt; [1,] -0.035 0.018 -0.42</span></span>
+<span><span class="co">#&gt; [2,] -0.059 0.203 -0.47</span></span></code></pre></div>
+</div>
+</div>
 </div>
   </div>
 
