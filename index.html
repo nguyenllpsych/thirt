@@ -71,7 +71,9 @@
 <div class="page-header"><h1 id="thirt">thirt<a class="anchor" aria-label="anchor" href="#thirt"></a>
 </h1></div>
 <!-- badges: start -->
-<!-- badges: end --><div class="section level3">
+
+<!-- badges: end -->
+<div class="section level3">
 <h3 id="an-r-packages-for-the-thurstonian-item-response-theory-model">An R Packages for the Thurstonian Item Response Theory model<a class="anchor" aria-label="anchor" href="#an-r-packages-for-the-thurstonian-item-response-theory-model"></a>
 </h3>
 <p>The <code>thirt</code> package contains functions designed to simulation data that for forced-choice questionnaires under the Thurstonian Item Response Theory model and to estimate person- and item-parameters using an MCMC algorithm.</p>
@@ -169,17 +171,172 @@
 <span><span class="co">#&gt; 2      2     1    4 2, 3, 1</span></span>
 <span><span class="co">#&gt; 3      1     2    1 1, 2, 3</span></span>
 <span><span class="co">#&gt; 4      2     2    3 2, 1, 3</span></span></code></pre></div>
+<p>In order to generate the indices for the <code>resp</code> column, please run <code>mupp::find_all_permutations(n = &lt;number_of_items_per_block&gt;, init = 1)</code>. For user convenience, a list of indices for a 3-item and 4-item block is shown below:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># 3-item block</span></span>
+<span><span class="va">triplets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu">mupp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/mupp/man/permutation.html" class="external-link">find_all_permutations</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">3</span>, init <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">triplets</span><span class="op">$</span><span class="va">seq</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">triplets</span><span class="op">$</span><span class="va">V1</span>, <span class="st">", "</span>, <span class="va">triplets</span><span class="op">$</span><span class="va">V2</span>, <span class="st">", "</span>, <span class="va">triplets</span><span class="op">$</span><span class="va">V3</span><span class="op">)</span></span>
+<span><span class="va">triplets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  resp <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">triplets</span><span class="op">)</span>,</span>
+<span>  seq  <span class="op">=</span> <span class="va">triplets</span><span class="op">$</span><span class="va">seq</span><span class="op">)</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">triplets</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th align="right">resp</th>
+<th align="left">seq</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="left">1, 2, 3</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="left">1, 3, 2</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="left">2, 1, 3</td>
+</tr>
+<tr class="even">
+<td align="right">4</td>
+<td align="left">2, 3, 1</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="left">3, 1, 2</td>
+</tr>
+<tr class="even">
+<td align="right">6</td>
+<td align="left">3, 2, 1</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="co"># 4-item block</span></span>
+<span><span class="va">quads</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu">mupp</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/mupp/man/permutation.html" class="external-link">find_all_permutations</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">4</span>, init <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">quads</span><span class="op">$</span><span class="va">seq</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">quads</span><span class="op">$</span><span class="va">V1</span>, <span class="st">", "</span>, <span class="va">quads</span><span class="op">$</span><span class="va">V2</span>, <span class="st">", "</span>, <span class="va">quads</span><span class="op">$</span><span class="va">V3</span>, <span class="st">", "</span>, <span class="va">quads</span><span class="op">$</span><span class="va">V4</span><span class="op">)</span></span>
+<span><span class="va">quads</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  resp <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">quads</span><span class="op">)</span>,</span>
+<span>  seq  <span class="op">=</span> <span class="va">quads</span><span class="op">$</span><span class="va">seq</span><span class="op">)</span></span>
+<span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">quads</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th align="right">resp</th>
+<th align="left">seq</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="left">1, 2, 3, 4</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="left">1, 2, 4, 3</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="left">1, 3, 2, 4</td>
+</tr>
+<tr class="even">
+<td align="right">4</td>
+<td align="left">1, 3, 4, 2</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="left">1, 4, 2, 3</td>
+</tr>
+<tr class="even">
+<td align="right">6</td>
+<td align="left">1, 4, 3, 2</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="left">2, 1, 3, 4</td>
+</tr>
+<tr class="even">
+<td align="right">8</td>
+<td align="left">2, 1, 4, 3</td>
+</tr>
+<tr class="odd">
+<td align="right">9</td>
+<td align="left">2, 3, 1, 4</td>
+</tr>
+<tr class="even">
+<td align="right">10</td>
+<td align="left">2, 3, 4, 1</td>
+</tr>
+<tr class="odd">
+<td align="right">11</td>
+<td align="left">2, 4, 1, 3</td>
+</tr>
+<tr class="even">
+<td align="right">12</td>
+<td align="left">2, 4, 3, 1</td>
+</tr>
+<tr class="odd">
+<td align="right">13</td>
+<td align="left">3, 1, 2, 4</td>
+</tr>
+<tr class="even">
+<td align="right">14</td>
+<td align="left">3, 1, 4, 2</td>
+</tr>
+<tr class="odd">
+<td align="right">15</td>
+<td align="left">3, 2, 1, 4</td>
+</tr>
+<tr class="even">
+<td align="right">16</td>
+<td align="left">3, 2, 4, 1</td>
+</tr>
+<tr class="odd">
+<td align="right">17</td>
+<td align="left">3, 4, 1, 2</td>
+</tr>
+<tr class="even">
+<td align="right">18</td>
+<td align="left">3, 4, 2, 1</td>
+</tr>
+<tr class="odd">
+<td align="right">19</td>
+<td align="left">4, 1, 2, 3</td>
+</tr>
+<tr class="even">
+<td align="right">20</td>
+<td align="left">4, 1, 3, 2</td>
+</tr>
+<tr class="odd">
+<td align="right">21</td>
+<td align="left">4, 2, 1, 3</td>
+</tr>
+<tr class="even">
+<td align="right">22</td>
+<td align="left">4, 2, 3, 1</td>
+</tr>
+<tr class="odd">
+<td align="right">23</td>
+<td align="left">4, 3, 1, 2</td>
+</tr>
+<tr class="even">
+<td align="right">24</td>
+<td align="left">4, 3, 2, 1</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section level3">
 <h3 id="parameter-estimation">Parameter Estimation<a class="anchor" aria-label="anchor" href="#parameter-estimation"></a>
 </h3>
-<p>Using the previously simulated response patterns, we can now apply the main estimation function to estimate all person- and item-parameters. In order to apply this function on real data, researchers must structure their data to follow the template of the two <code>resp</code> and <code>items</code> dataframes. In addition to these two required inputs, we may change the <code>control</code> argument to adjust the MCMC algorithm:</p>
+<p>Using the previously simulated response patterns, we can now apply the main estimation function to estimate all person- and item-parameters. In order to apply this function on real data, researchers must structure their data to follow the template of the two <code>resp</code> and <code>items</code> dataframes.</p>
+<p>In addition to these two required inputs, we may change the <code>control</code> argument to adjust the MCMC algorithm:</p>
 <ul>
-<li><p><code>n_iter</code>: the number of MCMC iterations</p></li>
-<li><p><code>n_burnin</code>: the number of burn-in MCMC iterations</p></li>
-<li><p><code>step_size_sd</code>: the step size standard deviation for the random-walk Metropolis step</p></li>
+<li><p><code>n_iter</code>: the number of MCMC iterations, exclude for default of 10000</p></li>
+<li><p><code>n_burnin</code>: the number of burn-in MCMC iterations, exclude for default of 1000</p></li>
+<li><p><code>step_size_sd</code>: the step size standard deviation for the random-walk Metropolis step, exclude for default of 0.1 across parameters</p></li>
 </ul>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># estimate person- and item-parameters based on previously generated response patterns</span></span>
 <span><span class="va">estimations</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/estimate_thirt_params_mcmc.html">estimate_thirt_params_mcmc</a></span><span class="op">(</span></span>
 <span>  resp <span class="op">=</span> <span class="va">resp</span><span class="op">$</span><span class="va">resp</span>,</span>
@@ -188,7 +345,7 @@
 <span>                 n_burnin <span class="op">=</span> <span class="fl">20</span>, <span class="co"># number of burn-ins</span></span>
 <span>                 step_size_sd <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span><span class="op">)</span> <span class="co"># step size SD across parameters</span></span></code></pre></div>
 <p>The estimated parameter values are computed as the mean across all iterations after the burn-in period, and they may be accessed by calling the <code>mean_mcmc</code> list object stored within the output of <code><a href="reference/estimate_thirt_params_mcmc.html">estimate_thirt_params_mcmc()</a></code>. There are four separate dataframes for the different person- and item-parameters. These parameter estimates can then be directly compared to the true simulated parameters that generated the model. We should note, however, that this illustrative example used a very simple data-generating model (with few people, items, and blocks) as well as a very short MCMC chain with only 100 iterations.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># view the estimated parameter values</span></span>
 <span><span class="va">estimations</span><span class="op">$</span><span class="va">mean_mcmc</span></span>
 <span><span class="co">#&gt; $gamma</span></span>
