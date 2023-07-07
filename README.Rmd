@@ -136,21 +136,45 @@ patterns:
 resp
 ```
 
+In order to generate the indices for the `resp` column, please run 
+`mupp::find_all_permutations(n = <number_of_items_per_block>, init = 1)`.
+For user convenience, a list of indices for a 3-item and 4-item block is shown below:
+
+```{r}
+# 3-item block
+triplets <- as.data.frame(mupp::find_all_permutations(n = 3, init = 1))
+triplets$seq <- paste0(triplets$V1, ", ", triplets$V2, ", ", triplets$V3)
+triplets <- data.frame(
+  resp = 1:nrow(triplets),
+  seq  = triplets$seq)
+knitr::kable(triplets)
+
+# 4-item block
+quads <- as.data.frame(mupp::find_all_permutations(n = 4, init = 1))
+quads$seq <- paste0(quads$V1, ", ", quads$V2, ", ", quads$V3, ", ", quads$V4)
+quads <- data.frame(
+  resp = 1:nrow(quads),
+  seq  = quads$seq)
+knitr::kable(quads)
+```
+
 ### Parameter Estimation
 
 Using the previously simulated response patterns, we can now apply the
 main estimation function to estimate all person- and item-parameters. In
 order to apply this function on real data, researchers must structure
 their data to follow the template of the two `resp` and `items`
-dataframes. In addition to these two required inputs, we may change the
+dataframes. 
+
+In addition to these two required inputs, we may change the
 `control` argument to adjust the MCMC algorithm:
 
--   `n_iter`: the number of MCMC iterations
+-   `n_iter`: the number of MCMC iterations, exclude for default of 10000
 
--   `n_burnin`: the number of burn-in MCMC iterations
+-   `n_burnin`: the number of burn-in MCMC iterations, exclude for default of 1000
 
 -   `step_size_sd`: the step size standard deviation for the random-walk
-    Metropolis step
+    Metropolis step, exclude for default of 0.1 across parameters
 
 ```{r, results = FALSE}
 # estimate person- and item-parameters based on previously generated response patterns
