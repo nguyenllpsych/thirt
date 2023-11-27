@@ -18,9 +18,14 @@
 #'                               or a vector of 4 values in the following order:
 #'                               theta, gamma, lambda, psisq
 #' @param initial_params a list of initial parameters to start the algorithm,
-#'                       each parameter needs to be a matrix.
+#'                       each parameter needs to be a matrix
+#'                       named theta, gamma, lambda, or psisq.
 #' @param fixed_params a list of fixed parameters to be excluded from estimation,
-#'                     each parameter needs to be a matrix.
+#'                     each parameter needs to be a matrix
+#'                     named theta, gamma, lambda, or psisq.
+#' @param op_params a list of fixed parameters for operational items,
+#'                  each parameter needs to be a matrix
+#'                  named gamma, lambda, or psisq.
 #'
 #' @return a list of three objects:
 #'         `all_iters` is a list of length `[n_iter]` for parameter estimates for all iterations,
@@ -53,6 +58,18 @@
 #' psisq  <- params$items$psisq
 #' theta  <- params$persons[, -1]
 #'
+#' # operational parameters
+#' op_gamma <- matrix(
+#' # first pair 1-2 is fixed for each of 2 blocks
+#' c(0.6, NA, NA,
+#'   -0.8, NA, NA)
+#' )
+#' op_lambda <- matrix(
+#' # first 2 items are fixed for each of 2 blocks
+#' c(0.9, 0.8, NA,
+#'   -0.5, 0.1, NA)
+#' )
+#'
 #' # estimation output
 #' start_mcmc <- Sys.time()
 #' output     <- estimate_thirt_params_mcmc(resp  = resp$resp,
@@ -60,7 +77,9 @@
 #'                                          control = list(n_iter   = n_iter,
 #'                                                         n_burnin = n_burnin,
 #'                                                         step_size_sd = step_size_sd),
-#'                                          fixed_params = list(psisq = matrix(psisq))
+#'                                          fixed_params = list(psisq = matrix(psisq),
+#'                                          op_params = list(gamma = op_gamma,
+#'                                                           lambda = op_lambda))
 #' )
 #' end_mcmc   <- Sys.time()
 #' #'
@@ -79,7 +98,8 @@ estimate_thirt_params_mcmc <- function(resp,
                                        items,
                                        control = list(),
                                        initial_params = list(),
-                                       fixed_params   = list()) {
+                                       fixed_params   = list(),
+                                       op_params = list()) {
 
   # set up new environment to store arguments
   mcmc_envir     <- new.env()
@@ -101,7 +121,9 @@ estimate_thirt_params_mcmc <- function(resp,
          envir = mcmc_envir)
 
   # rep step_size_sd if only 1 input
-  control$step_size_sd <- rep_len(control$step_size_sd, 4)
+  if("step_size_sd" %in% names(control) & !is.null(control$step_size_sd)) {
+    control$step_size_sd <- rep_len(control$step_size_sd, 4)
+  }
 
   # default controls
   control_default <- list(n_iter       = 10000,
@@ -129,6 +151,40 @@ estimate_thirt_params_mcmc <- function(resp,
            val = list(resp  = resp,
                       items = items)
          ),
+         envir = mcmc_envir)
+
+  # operational items parameters
+  # gamma params for operational items
+  if("gamma" %in% names(op_params) & !any(is.null(op_params$gamma))){
+
+    # create indices for fixed operational items
+    op_gamma_idx <- !is.na(op_params$gamma)
+
+    # update intial arguments for fixed operational items
+    mcmc_envir$arguments$gamma[op_gamma_idx] <- op_params$gamma[op_gamma_idx]
+  }
+  # lambda params for operational items
+  if("lambda" %in% names(op_params) & !any(is.null(op_params$lambda))){
+
+    # create indices for fixed operational items
+    op_lambda_idx <- !is.na(op_params$lambda)
+
+    # update intial arguments for fixed operational items
+    mcmc_envir$arguments$lambda[op_lambda_idx] <- op_params$lambda[op_lambda_idx]
+  }
+  # psisq params for operational items
+  if("psisq" %in% names(op_params) & !any(is.null(op_params$psisq))){
+
+    # create indices for fixed operational items
+    op_psisq_idx <- !is.na(op_params$psisq)
+
+    # update intial arguments for fixed operational items
+    mcmc_envir$arguments$psisq[op_psisq_idx] <- op_params$psisq[op_psisq_idx]
+  }
+
+  # store operational items parameters in mcmc_envir
+  assign(x     = "operational",
+         value = op_params,
          envir = mcmc_envir)
 
   # initial log-likelihood
@@ -264,6 +320,16 @@ update_thirt_params_mcmc <- function(envir,
                          },
                          MARGIN = c(1,2)
   )
+
+  # replace new params with fixed operational params if any
+  if(!is.null(envir$operational[[params_name]])){
+
+      # create T/F indices for whether an item is operational
+      op_idx <- !is.na(envir$operational[[params_name]])
+
+      # restore params_new to fixed for operational items
+      params_new[op_idx] <- envir$operational[[params_name]][op_idx]
+  }
 
   # update params in arguments to calculate log-likelihood
   envir$arguments[[params_name]] <- params_new
@@ -450,8 +516,6 @@ loglik_thirt_mcmc <- function(gamma,
 
 
 ## INITIALIZE PARAMETERS ##
-# TODO: specify some, not all, of one parameter
-
 initialize_thirt_params <- function(resp, items,
                                     initial_params = NULL,
                                     design) {
@@ -533,7 +597,15 @@ update_with_metrop <- function(loglik_old, loglik_new,
 
 
 ## ACCEPTANCE RATE COUNTER ##
-
+#' Calculate acceptance rate of MCMC chain
+#'
+#' @param all_iters the output object from estimate_thirt_params_mcmc function
+#'
+#' @param resp a data.frame of length `[n_person x n_block]` with at least three first variables:
+#'             variable `person` of the format `p` for person number `p`,
+#'             variable `block` of the format `b` for block number `b`,
+#'             variable `resp` of the format `r` for response number `r`
+#'                which corresponds to mupp::find_permutation_index().
 #' @export
 count_accept <- function(all_iters,
                          resp) {

@@ -9,7 +9,8 @@ estimate_thirt_params_mcmc(
   items,
   control = list(),
   initial_params = list(),
-  fixed_params = list()
+  fixed_params = list(),
+  op_params = list()
 )
 }
 \arguments{
@@ -34,10 +35,16 @@ or a vector of 4 values in the following order:
 theta, gamma, lambda, psisq}
 
 \item{initial_params}{a list of initial parameters to start the algorithm,
-each parameter needs to be a matrix.}
+each parameter needs to be a matrix
+named theta, gamma, lambda, or psisq.}
 
 \item{fixed_params}{a list of fixed parameters to be excluded from estimation,
-each parameter needs to be a matrix.}
+each parameter needs to be a matrix
+named theta, gamma, lambda, or psisq.}
+
+\item{op_params}{a list of fixed parameters for operational items,
+each parameter needs to be a matrix
+named gamma, lambda, or psisq.}
 }
 \value{
 a list of three objects:
@@ -74,6 +81,18 @@ lambda <- params$items$lambda
 psisq  <- params$items$psisq
 theta  <- params$persons[, -1]
 
+# operational parameters
+op_gamma <- matrix(
+# first pair 1-2 is fixed for each of 2 blocks
+c(0.6, NA, NA,
+  -0.8, NA, NA)
+)
+op_lambda <- matrix(
+# first 2 items are fixed for each of 2 blocks
+c(0.9, 0.8, NA,
+  -0.5, 0.1, NA)
+)
+
 # estimation output
 start_mcmc <- Sys.time()
 output     <- estimate_thirt_params_mcmc(resp  = resp$resp,
@@ -81,7 +100,9 @@ output     <- estimate_thirt_params_mcmc(resp  = resp$resp,
                                          control = list(n_iter   = n_iter,
                                                         n_burnin = n_burnin,
                                                         step_size_sd = step_size_sd),
-                                         fixed_params = list(psisq = matrix(psisq))
+                                         fixed_params = list(psisq = matrix(psisq),
+                                         op_params = list(gamma = op_gamma,
+                                                          lambda = op_lambda))
 )
 end_mcmc   <- Sys.time()
 #'

@@ -473,6 +473,32 @@ join_pair <- function(df, resp, col) {
   return(paste0(df[which(df$id == resp),][col[1]], "-", df[which(df$id == resp),][col[2]]))
 }
 
+#' Calculate probability
+#'
+#' Calculate the probability of all potential response patterns for each respondent using C++
+#' @param gamma a data.frame of length `[total binary outcomes]` with two variables:
+#'              variable `pair` of the format `i-j` for item pair `ij`,
+#'              variable `gamma` for threshold parameters.
+#' @param items a data.frame of length `[total items]` with five variables:
+#'              variable `item` of the format `i` for item number `i`,
+#'              variable `block` of the format `b` for block number `b`,
+#'              variable `dim` of the format `d` for dimension number `d`,
+#'              variable `lambda` for loadings,
+#'              variable `psisq` for uniqueness,
+#'              variable `dim` for dimensions.
+#' @param persons a data.frame of length `[number of people]` with variables:
+#'                variable `person` of the format `p` for person number `p`,
+#'                variables named `theta_d` for dimension number `d`.
+#' @param picked_order a data.frame of length `[person x block]` with four variables:
+#'             variable `person` of the format `p` for person number `p`,
+#'             variable `block` of the format `b` for block number `b`,
+#'             variable `resp` of the format `r` for response order number `r`
+#'                      which follows mupp::find_all_permutation orders,
+#'             variable `seq` which includes the items in ranked order by each person.
+#'             data.frame similar to output in `simulate_thirt_resp()$resp`
+#'
+#' @return a list of length `[block]` of matrices with dimension `[person X permutation]`
+#'         of probabilities for each response pattern per block.
 #' @export
 p_thirtC <- function(gamma, items, persons, picked_order = NULL) {
 
