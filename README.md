@@ -61,7 +61,7 @@ set.seed(2022)
 options(digits = 2)
 
 # specify test conditions
-params <- simulate_thirt_params (
+params <- simulate_thirt_params(
   n_person = 2,  # number of respondents
   n_item   = 3,  # number of items per block
   n_neg    = 1,  # number of negatively keyed items per block
@@ -245,8 +245,7 @@ estimations <- estimate_thirt_params_mcmc(
   resp = resp$resp,
   items = resp$items,
   control = list(n_iter = 100, # number of iterations
-                 n_burnin = 20, # number of burn-ins
-                 step_size_sd = 0.1)) # step size SD across parameters
+                 n_burnin = 20)) # number of burn-ins
 ```
 
 The estimated parameter values are computed as the mean across all
@@ -265,33 +264,114 @@ iterations.
 estimations$mean_mcmc
 #> $gamma
 #>        [,1]
-#> [1,]  0.421
-#> [2,]  0.479
-#> [3,] -0.625
-#> [4,]  0.219
-#> [5,] -0.023
-#> [6,] -0.317
+#> [1,]  0.044
+#> [2,]  0.028
+#> [3,] -0.065
+#> [4,]  0.095
+#> [5,]  0.083
+#> [6,] -0.050
 #> 
 #> $lambda
 #>       [,1]
-#> [1,]  0.62
-#> [2,]  0.42
-#> [3,] -0.81
-#> [4,] -0.88
-#> [5,]  1.01
-#> [6,]  0.55
+#> [1,]  1.03
+#> [2,]  0.97
+#> [3,] -1.04
+#> [4,] -1.02
+#> [5,]  1.04
+#> [6,]  0.96
 #> 
 #> $psisq
 #>      [,1]
-#> [1,] 0.73
-#> [2,] 0.78
-#> [3,] 0.44
-#> [4,] 0.55
-#> [5,] 0.67
-#> [6,] 0.61
+#> [1,] 0.79
+#> [2,] 0.87
+#> [3,] 0.62
+#> [4,] 0.63
+#> [5,] 0.68
+#> [6,] 0.77
+#> 
+#> $theta
+#>       [,1]  [,2]  [,3]
+#> [1,] -0.52 -0.32 -0.38
+#> [2,] -0.25  0.33  0.34
+```
+
+### Fixing Operational Items Parameters
+
+Often, test developers may want to fix item parameters $\gamma$,
+$\lambda$, and $\psi^2$ for the operational items and calibrate only
+field test items. Pre-determined parameters for the operational items
+can be specified with the `op_params` argument, which defaults to
+`NULL`. This argument needs to be a list containing matrices named
+`gamma`, `lambda`, and `psisq`. Parameter values for the fixed
+operational items should be provided whereas those for field test items
+should be left as `NA`. The order of parameters should be the same as
+shown in `simulate_thirt_params()` outputs in the `gamma` and `items`
+data frame for an equivalent design. In the example below, we consider
+items 1 and 2 to be operational items. This means we would fix $\lambda$
+and $\psi^2$ for these individual items and $\gamma$ for the pair 1-2.
+
+``` r
+# matrix for each params
+op_gamma <- matrix(
+  # first pair 1-2 is fixed for each of 2 blocks
+  c(0.6, NA, NA,
+    -0.8, NA, NA)
+)
+op_lambda <- matrix(
+  # first 2 items are fixed for each of 2 blocks
+  c(0.9, 0.8, NA,
+    -0.5, 0.1, NA)
+)
+op_psisq <- matrix(
+  # first 2 items are fixed for each of 2 blocks
+  c(0.4, 0.5, NA,
+    0.6, 0.8, NA)
+)
+
+# rerun the estimation algorithm providing operational params
+estimations_op <- estimate_thirt_params_mcmc(
+  # all arguments same as before
+  resp = resp$resp,
+  items = resp$items,
+  control = list(n_iter = 100, 
+                 n_burnin = 20),
+  # add operational items params
+  op_params = list(gamma = op_gamma,
+                   lambda = op_lambda,
+                   psisq = op_psisq))
+#>   |                                                                            |                                                                    |   0%  |                                                                            |                                                                    |   1%  |                                                                            |                                                                    |   2%  |                                                                            |mcmc                                                                |   3%  |                                                                            |mcmc                                                                |   4%  |                                                                            |mcmc                                                                |   5%  |                                                                            |mcmc                                                                |   6%  |                                                                            |mcmc                                                                |   7%  |                                                                            |mcmc                                                                |   8%  |                                                                            |mcmcmcmc                                                            |   9%  |                                                                            |mcmcmcmc                                                            |  10%  |                                                                            |mcmcmcmc                                                            |  11%  |                                                                            |mcmcmcmc                                                            |  12%  |                                                                            |mcmcmcmc                                                            |  13%  |                                                                            |mcmcmcmc                                                            |  14%  |                                                                            |mcmcmcmcmcmc                                                        |  15%  |                                                                            |mcmcmcmcmcmc                                                        |  16%  |                                                                            |mcmcmcmcmcmc                                                        |  17%  |                                                                            |mcmcmcmcmcmc                                                        |  18%  |                                                                            |mcmcmcmcmcmc                                                        |  19%  |                                                                            |mcmcmcmcmcmc                                                        |  20%  |                                                                            |mcmcmcmcmcmcmcmc                                                    |  21%  |                                                                            |mcmcmcmcmcmcmcmc                                                    |  22%  |                                                                            |mcmcmcmcmcmcmcmc                                                    |  23%  |                                                                            |mcmcmcmcmcmcmcmc                                                    |  24%  |                                                                            |mcmcmcmcmcmcmcmc                                                    |  25%  |                                                                            |mcmcmcmcmcmcmcmc                                                    |  26%  |                                                                            |mcmcmcmcmcmcmcmcmcmc                                                |  27%  |                                                                            |mcmcmcmcmcmcmcmcmcmc                                                |  28%  |                                                                            |mcmcmcmcmcmcmcmcmcmc                                                |  29%  |                                                                            |mcmcmcmcmcmcmcmcmcmc                                                |  30%  |                                                                            |mcmcmcmcmcmcmcmcmcmc                                                |  31%  |                                                                            |mcmcmcmcmcmcmcmcmcmc                                                |  32%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmc                                            |  33%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmc                                            |  34%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmc                                            |  35%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmc                                            |  36%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmc                                            |  37%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmc                                            |  38%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmc                                        |  39%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmc                                        |  40%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmc                                        |  41%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmc                                        |  42%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmc                                        |  43%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmc                                        |  44%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                                    |  45%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                                    |  46%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                                    |  47%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                                    |  48%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                                    |  49%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                                    |  50%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                                |  51%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                                |  52%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                                |  53%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                                |  54%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                                |  55%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                            |  56%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                            |  57%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                            |  58%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                            |  59%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                            |  60%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                            |  61%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                        |  62%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                        |  63%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                        |  64%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                        |  65%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                        |  66%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                        |  67%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                    |  68%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                    |  69%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                    |  70%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                    |  71%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                    |  72%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                    |  73%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                |  74%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                |  75%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                |  76%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                |  77%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                |  78%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc                |  79%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc            |  80%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc            |  81%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc            |  82%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc            |  83%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc            |  84%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc            |  85%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc        |  86%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc        |  87%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc        |  88%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc        |  89%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc        |  90%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc        |  91%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc    |  92%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc    |  93%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc    |  94%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc    |  95%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc    |  96%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc    |  97%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc|  98%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc|  99%  |                                                                            |mcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmcmc| 100%
+
+# view the estimated parameter values
+estimations_op$mean_mcmc
+#> $gamma
+#>         [,1]
+#> [1,]  0.6000
+#> [2,]  0.0123
+#> [3,]  0.0409
+#> [4,] -0.8000
+#> [5,] -0.0766
+#> [6,]  0.0095
+#> 
+#> $lambda
+#>       [,1]
+#> [1,]  0.90
+#> [2,]  0.80
+#> [3,] -0.99
+#> [4,] -0.50
+#> [5,]  0.10
+#> [6,]  1.01
+#> 
+#> $psisq
+#>      [,1]
+#> [1,] 0.40
+#> [2,] 0.50
+#> [3,] 0.78
+#> [4,] 0.60
+#> [5,] 0.80
+#> [6,] 0.70
 #> 
 #> $theta
 #>        [,1]  [,2]  [,3]
-#> [1,] -0.035 0.018 -0.42
-#> [2,] -0.059 0.203 -0.47
+#> [1,]  0.113 -0.59 -0.52
+#> [2,] -0.096 -0.62 -0.21
 ```
