@@ -22,6 +22,9 @@
     <loc>/reference/convert_TIRT.html</loc>
   </url>
   <url>
+    <loc>/reference/count_accept.html</loc>
+  </url>
+  <url>
     <loc>/reference/estimate_thirt_params_mcmc.html</loc>
   </url>
   <url>
@@ -32,6 +35,9 @@
   </url>
   <url>
     <loc>/reference/p_thirt.html</loc>
+  </url>
+  <url>
+    <loc>/reference/p_thirtC.html</loc>
   </url>
   <url>
     <loc>/reference/prior.html</loc>

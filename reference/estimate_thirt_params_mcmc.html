@@ -58,7 +58,8 @@
 <span>  <span class="va">items</span>,</span>
 <span>  control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  initial_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  fixed_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  fixed_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  op_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -92,12 +93,20 @@ theta, gamma, lambda, psisq</p></dd>
 
 <dt>initial_params</dt>
 <dd><p>a list of initial parameters to start the algorithm,
-each parameter needs to be a matrix.</p></dd>
+each parameter needs to be a matrix
+named theta, gamma, lambda, or psisq.</p></dd>
 
 
 <dt>fixed_params</dt>
 <dd><p>a list of fixed parameters to be excluded from estimation,
-each parameter needs to be a matrix.</p></dd>
+each parameter needs to be a matrix
+named theta, gamma, lambda, or psisq.</p></dd>
+
+
+<dt>op_params</dt>
+<dd><p>a list of fixed parameters for operational items,
+each parameter needs to be a matrix
+named gamma, lambda, or psisq.</p></dd>
 
 </dl></div>
     <div id="value">
@@ -137,6 +146,18 @@ each parameter needs to be a matrix.</p></dd>
 <span class="r-in"><span><span class="va">psisq</span>  <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">items</span><span class="op">$</span><span class="va">psisq</span></span></span>
 <span class="r-in"><span><span class="va">theta</span>  <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">persons</span><span class="op">[</span>, <span class="op">-</span><span class="fl">1</span><span class="op">]</span></span></span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># operational parameters</span></span></span>
+<span class="r-in"><span><span class="va">op_gamma</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span><span class="co"># first pair 1-2 is fixed for each of 2 blocks</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.6</span>, <span class="cn">NA</span>, <span class="cn">NA</span>,</span></span>
+<span class="r-in"><span>  <span class="op">-</span><span class="fl">0.8</span>, <span class="cn">NA</span>, <span class="cn">NA</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">op_lambda</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span><span class="co"># first 2 items are fixed for each of 2 blocks</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.9</span>, <span class="fl">0.8</span>, <span class="cn">NA</span>,</span></span>
+<span class="r-in"><span>  <span class="op">-</span><span class="fl">0.5</span>, <span class="fl">0.1</span>, <span class="cn">NA</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># estimation output</span></span></span>
 <span class="r-in"><span><span class="va">start_mcmc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">output</span>     <span class="op">&lt;-</span> <span class="fu">estimate_thirt_params_mcmc</span><span class="op">(</span>resp  <span class="op">=</span> <span class="va">resp</span><span class="op">$</span><span class="va">resp</span>,</span></span>
@@ -144,7 +165,9 @@ each parameter needs to be a matrix.</p></dd>
 <span class="r-in"><span>                                         control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>n_iter   <span class="op">=</span> <span class="va">n_iter</span>,</span></span>
 <span class="r-in"><span>                                                        n_burnin <span class="op">=</span> <span class="va">n_burnin</span>,</span></span>
 <span class="r-in"><span>                                                        step_size_sd <span class="op">=</span> <span class="va">step_size_sd</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                                         fixed_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>psisq <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">psisq</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                                         fixed_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>psisq <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">psisq</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                                         op_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>gamma <span class="op">=</span> <span class="va">op_gamma</span>,</span></span>
+<span class="r-in"><span>                                                          lambda <span class="op">=</span> <span class="va">op_lambda</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">end_mcmc</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co">#'</span></span></span>
