@@ -38,9 +38,9 @@
 #'
 #' # designs
 #' n_person      <- 100
-#' n_item        <- 4
-#' n_neg         <- 2
-#' n_block       <- 4
+#' n_item        <- 3
+#' n_neg         <- 1
+#' n_block       <- 2
 #' n_dim         <- 4
 #' n_iter        <- 5000
 #' n_burnin      <- 200
@@ -58,16 +58,21 @@
 #' psisq  <- params$items$psisq
 #' theta  <- params$persons[, -1]
 #'
-#' # operational parameters
+# operational parameters
 #' op_gamma <- matrix(
-#' # first pair 1-2 is fixed for each of 2 blocks
-#' c(0.6, NA, NA,
-#'   -0.8, NA, NA)
-#' )
+#'   # first pair 1-2 is fixed for each of 2 blocks
+#'   c(0.4, NA, NA,
+#'    -0.9, NA, NA)
+#'   )
 #' op_lambda <- matrix(
-#' # first 2 items are fixed for each of 2 blocks
-#' c(0.9, 0.8, NA,
-#'   -0.5, 0.1, NA)
+#'   # first 2 items are fixed for each of 2 blocks
+#'   c(-0.65, 0.55, NA,
+#'     0.57, -0.40, NA)
+#'   )
+#' op_psisq <- matrix(
+#'   # first 2 items are fixed for each of 2 blocks
+#'   c(0.89, 0.72, NA,
+#'     0.02, 0.41, NA)
 #' )
 #'
 #' # estimation output
@@ -77,9 +82,9 @@
 #'                                          control = list(n_iter   = n_iter,
 #'                                                         n_burnin = n_burnin,
 #'                                                         step_size_sd = step_size_sd),
-#'                                          fixed_params = list(psisq = matrix(psisq),
 #'                                          op_params = list(gamma = op_gamma,
-#'                                                           lambda = op_lambda))
+#'                                                           lambda = op_lambda,
+#'                                                           psisq = op_psisq)
 #' )
 #' end_mcmc   <- Sys.time()
 #' #'
@@ -93,6 +98,8 @@
 #'
 #' @importFrom magrittr
 #'             "%>%"
+#' @importFrom mupp
+#'             "find_all_permutations"
 #' @export
 estimate_thirt_params_mcmc <- function(resp,
                                        items,
@@ -124,7 +131,6 @@ estimate_thirt_params_mcmc <- function(resp,
   if("step_size_sd" %in% names(control) & !is.null(control$step_size_sd)) {
     control$step_size_sd <- rep_len(control$step_size_sd, 4)
   }
-
   # default controls
   control_default <- list(n_iter       = 10000,
                           n_burnin     = 1000,
@@ -140,7 +146,6 @@ estimate_thirt_params_mcmc <- function(resp,
   # fixed parameters
   initial_params <- modifyList(x   = initial_params,
                                val = fixed_params)
-
   # initial parameters
   assign(x     = "arguments",
          value = modifyList(
@@ -153,104 +158,356 @@ estimate_thirt_params_mcmc <- function(resp,
          ),
          envir = mcmc_envir)
 
-  # operational items parameters
-  # gamma params for operational items
-  if("gamma" %in% names(op_params) & !any(is.null(op_params$gamma))){
+  #### WITHOUT FIELD-TEST ITEMS ####
+
+  if(length(test) == 0) {
+
+    # initial log-likelihood
+    assign(x     = "loglik",
+           value = do.call(what = loglik_thirt_mcmc,
+                           args = append(mcmc_envir$arguments,
+                                         list(design = mcmc_envir$design))),
+           envir = mcmc_envir)
+
+    # progress bar
+    pb <- txtProgressBar(max   = mcmc_envir$control$n_iter,
+                         char  = "mcmc",
+                         style = 3)
+
+    # all_iters list for all parameter estimates
+    all_iters = list(gamma  = list(),
+                     lambda = list(),
+                     psisq  = list(),
+                     theta  = list())
+
+    # iterations
+    for(iter in seq_len(mcmc_envir$control$n_iter)) {
+
+      # update environment
+      mcmc_envir <- estimate_thirt_params_mcmc_one(envir        = mcmc_envir,
+                                                   fixed_params = fixed_params)
+
+      # stores parameters
+      all_iters$gamma[[iter]]  <- mcmc_envir$arguments$gamma
+      all_iters$lambda[[iter]] <- mcmc_envir$arguments$lambda
+      all_iters$psisq[[iter]]  <- mcmc_envir$arguments$psisq
+      all_iters$theta[[iter]]  <- mcmc_envir$arguments$theta
+
+      # progress bar
+      setTxtProgressBar(pb    = pb,
+                        value = iter)
+
+    } # END for iter LOOP
+
+    # remove burn-ins
+    final_iters <- lapply(all_iters,
+                          FUN = function(x) x[-mcmc_envir$control$n_burnin]
+    )
+
+    # mean and sd of parameters after removing burn-ins
+    mean_mcmc <- lapply(final_iters,
+                        FUN = function(x) {
+                          y = do.call(cbind, x)
+                          y = array(y, dim=c(dim(x[[1]]), length(x)))
+                          apply(X = y,
+                                MARGIN = c(1, 2),
+                                FUN = function(x) mean(x, na.rm = T))
+    }) # END mean_mcmc lapply
+    sd_mcmc  <- lapply(final_iters,
+                       FUN = function(x) {
+                         y = do.call(cbind, x)
+                         y = array(y, dim=c(dim(x[[1]]), length(x)))
+                         apply(X = y,
+                               MARGIN = c(1, 2),
+                               FUN = function(x) sd(x, na.rm = T))
+    }) # END sd_mcmc lapply
+  } # END IF no field test STATEMENT
+
+  #### WITH FIELD-TEST ITEMS ####
+
+  if(length(op_params) > 0) {
 
     # create indices for fixed operational items
     op_gamma_idx <- !is.na(op_params$gamma)
-
-    # update intial arguments for fixed operational items
-    mcmc_envir$arguments$gamma[op_gamma_idx] <- op_params$gamma[op_gamma_idx]
-  }
-  # lambda params for operational items
-  if("lambda" %in% names(op_params) & !any(is.null(op_params$lambda))){
-
-    # create indices for fixed operational items
     op_lambda_idx <- !is.na(op_params$lambda)
-
-    # update intial arguments for fixed operational items
-    mcmc_envir$arguments$lambda[op_lambda_idx] <- op_params$lambda[op_lambda_idx]
-  }
-  # psisq params for operational items
-  if("psisq" %in% names(op_params) & !any(is.null(op_params$psisq))){
-
-    # create indices for fixed operational items
     op_psisq_idx <- !is.na(op_params$psisq)
 
-    # update intial arguments for fixed operational items
-    mcmc_envir$arguments$psisq[op_psisq_idx] <- op_params$psisq[op_psisq_idx]
-  }
+    # update items dataframe to exclude field test items
+    #   using lambda indices -- should be the same for all item params
+    op_items <- items[op_lambda_idx,]
+    #   remove blocks with only one or fewer operational item
+    op_block_idx <- table(items$block) > 1
+    op_items <- op_items[op_items$block %in% which(op_block_idx),]
+    #   create new item indices
+    op_items$new <- as.vector(
+      unlist(sapply(unique(op_items$block), function(x) {
+        seq_along(op_items$block[op_items$block == x])
+        })))
 
-  # store operational items parameters in mcmc_envir
-  assign(x     = "operational",
-         value = op_params,
-         envir = mcmc_envir)
+    # update resp dataframe to have only operational items
+    #   remove blocks with only one or fewer operational item
+    op_resp <- resp[resp$block %in% which(op_block_idx),]
+    #   initialize vectors of op items indices
+    #   to be used for each block
+    op_idx <- op_lambda_idx
+    #   initialize dataframe for op_resp
+    op_resp <- data.frame()
+    #   iterate through blocks to clean up resp and append to op_resp
+    for(block in seq(n_block)) {
+      # extract test items for current blocks
+      current_n_item   <- n_item[block]
+      current_op_idx   <- op_idx[seq(current_n_item)]
+      current_test     <- which(current_op_idx == FALSE)
+      current_op_items <- op_items[op_items$block == block,]
+      # check if current block has more than 1 operational item
+      if(block %in% op_items$block) {
 
-  # initial log-likelihood
-  assign(x     = "loglik",
-         value = do.call(what = loglik_thirt_mcmc,
-                         args = append(mcmc_envir$arguments,
-                                       list(design = mcmc_envir$design))),
-         envir = mcmc_envir)
+        # grab resp dataframe for the current block
+        current_resp <- resp[resp$block == block,]
 
-  # progress bar
-  pb <- txtProgressBar(max   = mcmc_envir$control$n_iter,
-                       char  = "mcmc",
-                       style = 3)
+        # remove test items from seq
+        current_resp$seq <- lapply(current_resp$seq,
+                                   function(x) x[!(x %in% current_test)])
+        current_resp$seq <- sapply(current_resp$seq,
+                                   function(x) paste(x, collapse = ", "))
 
-  # all_iters list for all parameter estimates
-  all_iters = list(gamma  = list(),
-                   lambda = list(),
-                   psisq  = list(),
-                   theta  = list())
+        # replace old item numbers with new item numbers
+        for(i in seq_len(nrow(current_op_items))) {
+          current_resp$seq <- gsub(
+            pattern = current_op_items$item[i],
+            replacement = current_op_items$new[i],
+            x = current_resp$seq
+          )
+        }
 
-  # iterations
-  for(iter in seq_len(mcmc_envir$control$n_iter)) {
+        # update resp patterns
+        #   all permutations for the operational items
+        resp_ref <- as.data.frame(
+          mupp::find_all_permutations(n = sum(current_op_idx),
+                                      init = 1)
+        )
+        resp_ref$seq <- apply(resp_ref, 1, function(row) paste(row, collapse = ", "))
+        resp_ref <- data.frame(
+          resp = 1:nrow(resp_ref),
+          seq  = resp_ref$seq
+        )
+        #   match seq to update current_resp with new resp indicator
+        match_indices <- match(current_resp$seq, resp_ref$seq)
+        current_resp$resp <- resp_ref$resp[match_indices]
+      } else {
+        # skip blocks with one or fewer operational item
+        current_resp <- data.frame()
+      }
 
-    # update environment
-    mcmc_envir <- estimate_thirt_params_mcmc_one(envir        = mcmc_envir,
-                                                 fixed_params = fixed_params)
+      # append current_resp to the op_resp dataframe
+      op_resp <- rbind(op_resp, current_resp)
+    } # END for block LOOP
 
-    # stores parameters
-    all_iters$gamma[[iter]]  <- mcmc_envir$arguments$gamma
-    all_iters$lambda[[iter]] <- mcmc_envir$arguments$lambda
-    all_iters$psisq[[iter]]  <- mcmc_envir$arguments$psisq
-    all_iters$theta[[iter]]  <- mcmc_envir$arguments$theta
+    # replace item with new item keys in op_items
+    op_items$item <- op_items$new
+    op_items$new <- NULL
+
+    # update test design to exclude field test items
+    op_n_item       <- as.data.frame(table(op_items$block))[ , 2]
+    op_block_size   <- choose2(n_item)
+    op_n_block      <- length(unique(op_items$block))
+    op_n_person     <- length(unique(op_resp$person))
+    op_n_dim        <- length(unique(op_items$dim))
+    assign(x     = "op_design",
+           value = list(
+             n_item     = op_n_item,
+             block_size = op_block_size,
+             n_block    = op_n_block,
+             n_person   = op_n_person,
+             n_dim      = op_n_dim,
+             key        = op_items$key),
+           envir = mcmc_envir)
+
+    # ESTIMATE THETA FROM OPS ITEMS ----
+
+    # fix all item parameters (because all items are operational)
+    op_fixed_params   <- modifyList(x = fixed_params,
+                                    val = list(
+                                      gamma  = op_gamma[!is.na(op_gamma)],
+                                      lambda = op_lambda[!is.na(op_lambda)],
+                                      psisq  = op_psisq[!is.na(op_psisq)]))
+    op_initial_params <- modifyList(x   = initial_params,
+                                    val = op_fixed_params)
+
+    # update envir arguments with initial params
+    assign(x     = "arguments",
+           value = modifyList(
+             x   = initialize_thirt_params(resp  = op_resp,
+                                           items = op_items,
+                                           initial_params = op_initial_params,
+                                           design = mcmc_envir$op_design),
+             val = list(resp  = op_resp,
+                        items = op_items)
+           ),
+           envir = mcmc_envir)
+
+    # initial log-likelihood
+    assign(x     = "loglik",
+           value = do.call(what = loglik_thirt_mcmc,
+                           args = append(mcmc_envir$arguments,
+                                         list(design = mcmc_envir$op_design))),
+           envir = mcmc_envir)
 
     # progress bar
-    setTxtProgressBar(pb    = pb,
-                      value = iter)
+    pb <- txtProgressBar(max   = mcmc_envir$control$n_iter,
+                         char  = "mcmc",
+                         style = 3)
 
-  } # END for iter LOOP
+    # all_iters list for all parameter estimates
+    all_iters = list(gamma  = list(),
+                     lambda = list(),
+                     psisq  = list(),
+                     theta  = list())
 
-  # remove burn-ins
-  final_iters <- lapply(all_iters,
-                        FUN = function(x) x[-mcmc_envir$control$n_burnin]
-  )
+    # iterations
+    for(iter in seq_len(mcmc_envir$control$n_iter)) {
 
-  # mean and sd of parameters after removing burn-ins
-  mean_mcmc <- lapply(final_iters,
-                      FUN = function(x) {
-                        y = do.call(cbind, x)
-                        y = array(y, dim=c(dim(x[[1]]), length(x)))
-                        apply(X = y,
-                              MARGIN = c(1, 2),
-                              FUN = function(x) mean(x, na.rm = T))
-  }) # END mean_mcmc lapply
-  sd_mcmc  <- lapply(final_iters,
-                     FUN = function(x) {
-                       y = do.call(cbind, x)
-                       y = array(y, dim=c(dim(x[[1]]), length(x)))
-                       apply(X = y,
-                             MARGIN = c(1, 2),
-                             FUN = function(x) sd(x, na.rm = T))
-  }) # END sd_mcmc lapply
+      # update environment
+      mcmc_envir <- estimate_thirt_params_mcmc_one(envir        = mcmc_envir,
+                                                   fixed_params = op_fixed_params)
+
+      # stores parameters
+      all_iters$gamma[[iter]]  <- mcmc_envir$arguments$gamma
+      all_iters$lambda[[iter]] <- mcmc_envir$arguments$lambda
+      all_iters$psisq[[iter]]  <- mcmc_envir$arguments$psisq
+      all_iters$theta[[iter]]  <- mcmc_envir$arguments$theta
+
+      # progress bar
+      setTxtProgressBar(pb    = pb,
+                        value = iter)
+
+    } # END for iter LOOP
+
+    # remove burn-ins
+    final_iters <- lapply(all_iters,
+                          FUN = function(x) x[-mcmc_envir$control$n_burnin]
+    )
+
+    # mean and sd of parameters after removing burn-ins
+    mean_mcmc <- lapply(final_iters,
+                        FUN = function(x) {
+                          y = do.call(cbind, x)
+                          y = array(y, dim=c(dim(x[[1]]), length(x)))
+                          apply(X = y,
+                                MARGIN = c(1, 2),
+                                FUN = function(x) mean(x, na.rm = T))
+                        }) # END mean_mcmc lapply
+    sd_mcmc  <- lapply(final_iters,
+                       FUN = function(x) {
+                         y = do.call(cbind, x)
+                         y = array(y, dim=c(dim(x[[1]]), length(x)))
+                         apply(X = y,
+                               MARGIN = c(1, 2),
+                               FUN = function(x) sd(x, na.rm = T))
+                       }) # END sd_mcmc lapply
+
+    # ESTIMATE FIELD TEST ITEMS FROM OPS ITEMS AND FIXED THETAS ----
+    # store operational items parameters in mcmc_envir
+    #   this should only be present for this second step, NOT first step
+    #   because first step only includes operational items,
+    #   so they are covered under the fixed_params argument
+    assign(x     = "operational",
+           value = op_params,
+           envir = mcmc_envir)
+
+    # fix theta (because they have been estimated in step one)
+    test_fixed_params   <- modifyList(x = fixed_params,
+                                      val = list(
+                                        theta  = mean_mcmc$theta))
+    test_initial_params <- modifyList(x   = initial_params,
+                                      val = test_fixed_params)
+
+    # initial parameters
+    assign(x     = "arguments",
+           value = modifyList(
+             x   = initialize_thirt_params(resp  = resp,
+                                           items = items,
+                                           initial_params = test_initial_params,
+                                           design = mcmc_envir$design),
+             val = list(resp  = resp,
+                        items = items)
+           ),
+           envir = mcmc_envir)
+
+    # update initial arguments for fixed operational items
+    mcmc_envir$arguments$gamma[op_gamma_idx] <- op_params$gamma[op_gamma_idx]
+    mcmc_envir$arguments$lambda[op_lambda_idx] <- op_params$lambda[op_lambda_idx]
+    mcmc_envir$arguments$psisq[op_psisq_idx] <- op_params$psisq[op_psisq_idx]
+
+    # initial log-likelihood
+    assign(x     = "loglik",
+           value = do.call(what = loglik_thirt_mcmc,
+                           args = append(mcmc_envir$arguments,
+                                         list(design = mcmc_envir$design))),
+           envir = mcmc_envir)
+
+    # progress bar
+    pb <- txtProgressBar(max   = mcmc_envir$control$n_iter,
+                         char  = "mcmc",
+                         style = 3)
+
+    # all_iters list for all parameter estimates
+    all_iters_test = list(gamma  = list(),
+                          lambda = list(),
+                          psisq  = list(),
+                          theta  = list())
+
+    # iterations
+    for(iter in seq_len(mcmc_envir$control$n_iter)) {
+
+      # update environment
+      mcmc_envir <- estimate_thirt_params_mcmc_one(envir        = mcmc_envir,
+                                                   fixed_params = fixed_params)
+
+      # stores parameters
+      all_iters_test$gamma[[iter]]  <- mcmc_envir$arguments$gamma
+      all_iters_test$lambda[[iter]] <- mcmc_envir$arguments$lambda
+      all_iters_test$psisq[[iter]]  <- mcmc_envir$arguments$psisq
+      all_iters_test$theta[[iter]]  <- mcmc_envir$arguments$theta
+
+      # progress bar
+      setTxtProgressBar(pb    = pb,
+                        value = iter)
+
+    } # END for iter LOOP
+
+    # remove burn-ins
+    final_iters_test <- lapply(all_iters_test,
+                               FUN = function(x) x[-mcmc_envir$control$n_burnin]
+    )
+
+    # mean and sd of parameters after removing burn-ins
+    mean_mcmc_test <- lapply(final_iters_test,
+                        FUN = function(x) {
+                          y = do.call(cbind, x)
+                          y = array(y, dim=c(dim(x[[1]]), length(x)))
+                          apply(X = y,
+                                MARGIN = c(1, 2),
+                                FUN = function(x) mean(x, na.rm = T))
+                        }) # END mean_mcmc_test lapply
+    sd_mcmc_test  <- lapply(final_iters_test,
+                       FUN = function(x) {
+                         y = do.call(cbind, x)
+                         y = array(y, dim=c(dim(x[[1]]), length(x)))
+                         apply(X = y,
+                               MARGIN = c(1, 2),
+                               FUN = function(x) sd(x, na.rm = T))
+                       }) # END sd_mcmc_test lapply
+
+  } # END IF field test STATEMENT
 
   # return list
   return(list(all_iters = all_iters,
               mean_mcmc = mean_mcmc,
-              sd_mcmc   = sd_mcmc))
+              sd_mcmc   = sd_mcmc,
+              all_iters_test = all_iters_test,
+              mean_mcmc_test = mean_mcmc_test,
+              sd_mcmc_test   = sd_mcmc_test))
 
 } # END estimate_thirt_params_mcmc FUNCTION
 
