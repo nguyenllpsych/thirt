@@ -61,9 +61,9 @@ set.seed(202108)
 
 # designs
 n_person      <- 100
-n_item        <- 4
-n_neg         <- 2
-n_block       <- 4
+n_item        <- 3
+n_neg         <- 1
+n_block       <- 2
 n_dim         <- 4
 n_iter        <- 5000
 n_burnin      <- 200
@@ -81,16 +81,20 @@ lambda <- params$items$lambda
 psisq  <- params$items$psisq
 theta  <- params$persons[, -1]
 
-# operational parameters
 op_gamma <- matrix(
-# first pair 1-2 is fixed for each of 2 blocks
-c(0.6, NA, NA,
-  -0.8, NA, NA)
-)
+  # first pair 1-2 is fixed for each of 2 blocks
+  c(0.4, NA, NA,
+   -0.9, NA, NA)
+  )
 op_lambda <- matrix(
-# first 2 items are fixed for each of 2 blocks
-c(0.9, 0.8, NA,
-  -0.5, 0.1, NA)
+  # first 2 items are fixed for each of 2 blocks
+  c(-0.65, 0.55, NA,
+    0.57, -0.40, NA)
+  )
+op_psisq <- matrix(
+  # first 2 items are fixed for each of 2 blocks
+  c(0.89, 0.72, NA,
+    0.02, 0.41, NA)
 )
 
 # estimation output
@@ -100,9 +104,9 @@ output     <- estimate_thirt_params_mcmc(resp  = resp$resp,
                                          control = list(n_iter   = n_iter,
                                                         n_burnin = n_burnin,
                                                         step_size_sd = step_size_sd),
-                                         fixed_params = list(psisq = matrix(psisq),
                                          op_params = list(gamma = op_gamma,
-                                                          lambda = op_lambda))
+                                                          lambda = op_lambda,
+                                                          psisq = op_psisq)
 )
 end_mcmc   <- Sys.time()
 #'
