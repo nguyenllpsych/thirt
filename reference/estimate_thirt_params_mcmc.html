@@ -113,10 +113,14 @@ named gamma, lambda, or psisq.</p></dd>
     <h2>Value</h2>
     
 
-<p>a list of three objects:
+<p>a list of three objects if no operational items are provided:
 <code>all_iters</code> is a list of length <code>[n_iter]</code> for parameter estimates for all iterations,
 <code>mean_mcmc</code> is a list of length 4 for mean of four parameters after burn-ins,
-<code>sd_mcmc</code> is a list of length 4 for SD of four parameters after burn-ins.</p>
+<code>sd_mcmc</code> is a list of length 4 for SD of four parameters after burn-ins.
+three additional objects are included if operational items are provided:
+<code>all_iters_test</code> includes all iterations for test items calibration,
+<code>mean_mcmc_test</code> includes parameter estimates for test items calibration,
+<code>sd_mcmc_test</code> includes parameter SD across iterations for test items calibration.</p>
     </div>
 
     <div id="ref-examples">
@@ -130,8 +134,8 @@ named gamma, lambda, or psisq.</p></dd>
 <span class="r-in"><span><span class="va">n_neg</span>         <span class="op">&lt;-</span> <span class="fl">1</span></span></span>
 <span class="r-in"><span><span class="va">n_block</span>       <span class="op">&lt;-</span> <span class="fl">2</span></span></span>
 <span class="r-in"><span><span class="va">n_dim</span>         <span class="op">&lt;-</span> <span class="fl">4</span></span></span>
-<span class="r-in"><span><span class="va">n_iter</span>        <span class="op">&lt;-</span> <span class="fl">5000</span></span></span>
-<span class="r-in"><span><span class="va">n_burnin</span>      <span class="op">&lt;-</span> <span class="fl">200</span></span></span>
+<span class="r-in"><span><span class="va">n_iter</span>        <span class="op">&lt;-</span> <span class="fl">1000</span></span></span>
+<span class="r-in"><span><span class="va">n_burnin</span>      <span class="op">&lt;-</span> <span class="fl">20</span></span></span>
 <span class="r-in"><span><span class="va">step_size_sd</span>  <span class="op">&lt;-</span> <span class="fl">0.1</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># simulate parameters</span></span></span>
@@ -146,6 +150,7 @@ named gamma, lambda, or psisq.</p></dd>
 <span class="r-in"><span><span class="va">psisq</span>  <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">items</span><span class="op">$</span><span class="va">psisq</span></span></span>
 <span class="r-in"><span><span class="va">theta</span>  <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">persons</span><span class="op">[</span>, <span class="op">-</span><span class="fl">1</span><span class="op">]</span></span></span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># operational parameters</span></span></span>
 <span class="r-in"><span><span class="va">op_gamma</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="co"># first pair 1-2 is fixed for each of 2 blocks</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.4</span>, <span class="cn">NA</span>, <span class="cn">NA</span>,</span></span>
@@ -174,12 +179,12 @@ named gamma, lambda, or psisq.</p></dd>
 <span class="r-in"><span>                                                          psisq <span class="op">=</span> <span class="va">op_psisq</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">end_mcmc</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.time</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co">#'</span></span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># correlate estimated and true parameters</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">theta</span>, <span class="va">output</span><span class="op">$</span><span class="va">mean_mcmc</span><span class="op">$</span><span class="va">theta</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">gamma</span>, <span class="va">output</span><span class="op">$</span><span class="va">mean_mcmc</span><span class="op">$</span><span class="va">gamma</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">lambda</span>, <span class="va">output</span><span class="op">$</span><span class="va">mean_mcmc</span><span class="op">$</span><span class="va">lambda</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">psisq</span>, <span class="va">output</span><span class="op">$</span><span class="va">mean_mcmc</span><span class="op">$</span><span class="va">psisq</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">gamma</span>, <span class="va">output</span><span class="op">$</span><span class="va">mean_mcmc_test</span><span class="op">$</span><span class="va">gamma</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">lambda</span>, <span class="va">output</span><span class="op">$</span><span class="va">mean_mcmc_test</span><span class="op">$</span><span class="va">lambda</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">psisq</span>, <span class="va">output</span><span class="op">$</span><span class="va">mean_mcmc_test</span><span class="op">$</span><span class="va">psisq</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">(</span><span class="va">time_mcmc</span> <span class="op">&lt;-</span> <span class="va">end_mcmc</span> <span class="op">-</span> <span class="va">start_mcmc</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-in"><span></span></span>
