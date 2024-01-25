@@ -224,6 +224,12 @@ estimate_thirt_params_mcmc <- function(resp,
                                MARGIN = c(1, 2),
                                FUN = function(x) sd(x, na.rm = T))
     }) # END sd_mcmc lapply
+
+    # return list
+    return(list(all_iters = all_iters,
+                mean_mcmc = mean_mcmc,
+                sd_mcmc   = sd_mcmc))
+
   } # END IF no field test STATEMENT
 
   #### WITH FIELD-TEST ITEMS ####
@@ -509,9 +515,6 @@ estimate_thirt_params_mcmc <- function(resp,
                                MARGIN = c(1, 2),
                                FUN = function(x) sd(x, na.rm = T))
                        }) # END sd_mcmc_test lapply
-
-  } # END IF field test STATEMENT
-
   # return list
   return(list(all_iters = all_iters,
               mean_mcmc = mean_mcmc,
@@ -519,6 +522,8 @@ estimate_thirt_params_mcmc <- function(resp,
               all_iters_test = all_iters_test,
               mean_mcmc_test = mean_mcmc_test,
               sd_mcmc_test   = sd_mcmc_test))
+
+  } # END IF field test STATEMENT
 
 } # END estimate_thirt_params_mcmc FUNCTION
 
