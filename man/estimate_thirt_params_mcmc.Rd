@@ -47,10 +47,14 @@ each parameter needs to be a matrix
 named gamma, lambda, or psisq.}
 }
 \value{
-a list of three objects:
+a list of three objects if no operational items are provided:
 \code{all_iters} is a list of length \verb{[n_iter]} for parameter estimates for all iterations,
 \code{mean_mcmc} is a list of length 4 for mean of four parameters after burn-ins,
 \code{sd_mcmc} is a list of length 4 for SD of four parameters after burn-ins.
+three additional objects are included if operational items are provided:
+\code{all_iters_test} includes all iterations for test items calibration,
+\code{mean_mcmc_test} includes parameter estimates for test items calibration,
+\code{sd_mcmc_test} includes parameter SD across iterations for test items calibration.
 }
 \description{
 Estimate parameters with MCMC
@@ -65,8 +69,8 @@ n_item        <- 3
 n_neg         <- 1
 n_block       <- 2
 n_dim         <- 4
-n_iter        <- 5000
-n_burnin      <- 200
+n_iter        <- 1000
+n_burnin      <- 20
 step_size_sd  <- 0.1
 
 # simulate parameters
@@ -81,6 +85,7 @@ lambda <- params$items$lambda
 psisq  <- params$items$psisq
 theta  <- params$persons[, -1]
 
+# operational parameters
 op_gamma <- matrix(
   # first pair 1-2 is fixed for each of 2 blocks
   c(0.4, NA, NA,
@@ -109,12 +114,12 @@ output     <- estimate_thirt_params_mcmc(resp  = resp$resp,
                                                           psisq = op_psisq)
 )
 end_mcmc   <- Sys.time()
-#'
+
 # correlate estimated and true parameters
 diag(cor(theta, output$mean_mcmc$theta))
-cor(gamma, output$mean_mcmc$gamma)
-cor(lambda, output$mean_mcmc$lambda)
-cor(psisq, output$mean_mcmc$psisq)
+cor(gamma, output$mean_mcmc_test$gamma)
+cor(lambda, output$mean_mcmc_test$lambda)
+cor(psisq, output$mean_mcmc_test$psisq)
 (time_mcmc <- end_mcmc - start_mcmc)
 }
 
