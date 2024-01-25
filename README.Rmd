@@ -24,7 +24,7 @@ knitr::opts_chunk$set(
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![Codecov test
 coverage](https://codecov.io/gh/nguyenllpsych/thirt/branch/main/graph/badge.svg)](https://codecov.io/gh/nguyenllpsych/thirt?branch=main)
-[![R-CMD-check](https://github.com/nguyenllpsych/thirt/workflows/R-CMD-check/badge.svg)](https://github.com/nguyenllpsych/thirt/actions)
+[![R-CMD-check](https://github.com/nguyenllpsych/thirt/actions/workflows/check-release.yaml/badge.svg)](https://github.com/nguyenllpsych/thirt/actions)
 
 <!-- badges: end -->
 
@@ -215,40 +215,60 @@ can be specified with the `op_params` argument, which defaults to
 operational items should be provided whereas those for field test items
 should be left as `NA`. The order of parameters should be the same as
 shown in `simulate_thirt_params()` outputs in the `gamma` and `items`
-data frame for an equivalent design. In the example below, we consider
-items 1 and 2 to be operational items. This means we would fix $\lambda$
-and $\psi^2$ for these individual items and $\gamma$ for the pair 1-2.
+data frame for an equivalent design. 
+
+When operational items are specified, they alone are used for trait scoring.
+Test items do not affect trait scores.
+
+In the example below, we consider items 1 and 2 to be operational items. 
+This means we would fix $\lambda$ and $\psi^2$ for these individual items and 
+$\gamma$ for the pair 1-2.
+
+Trait scores can be obtained in `mean_mcmc$theta` whereas item calibration
+results can be obtained in `mean_mcmc_test$gamma`, `mean_mcmc_test$lambda`, and
+`mean_mcmc_test$psisq`. Note that the operational item parameters are fixed.
 
 ```{r}
 # matrix for each params
+# operational parameters
 op_gamma <- matrix(
   # first pair 1-2 is fixed for each of 2 blocks
-  c(0.6, NA, NA,
-    -0.8, NA, NA)
-)
+  c(0.4, NA, NA,
+   -0.9, NA, NA)
+  )
 op_lambda <- matrix(
   # first 2 items are fixed for each of 2 blocks
-  c(0.9, 0.8, NA,
-    -0.5, 0.1, NA)
-)
+  c(-0.65, 0.55, NA,
+    0.57, -0.40, NA)
+  )
 op_psisq <- matrix(
   # first 2 items are fixed for each of 2 blocks
-  c(0.4, 0.5, NA,
-    0.6, 0.8, NA)
+  c(0.89, 0.72, NA,
+    0.02, 0.41, NA)
 )
 
 # rerun the estimation algorithm providing operational params
+start_mcmc <- Sys.time()
 estimations_op <- estimate_thirt_params_mcmc(
-  # all arguments same as before
-  resp = resp$resp,
+  resp  = resp$resp,
   items = resp$items,
-  control = list(n_iter = 100, 
-                 n_burnin = 20),
-  # add operational items params
-  op_params = list(gamma = op_gamma,
+  control = list(n_iter   = 500,
+                 n_burnin = 20,
+                 step_size_sd = c(0.5,     # theta
+                                  0.01,    # gamma
+                                  0.01,    # lambda
+                                  0.075)), # psisq
+  op_params = list(gamma  = op_gamma,
                    lambda = op_lambda,
-                   psisq = op_psisq))
+                   psisq  = op_psisq)
+)
+end_mcmc   <- Sys.time()
 
-# view the estimated parameter values
-estimations_op$mean_mcmc
+# view the estimated parameter values - person scores
+estimations_op$mean_mcmc$theta
+
+# view the estimated parameter values - item parameters
+estimations_op$mean_mcmc_test$gamma
+estimations_op$mean_mcmc_test$lambda
+estimations_op$mean_mcmc_test$psisq
 ```
