@@ -27,10 +27,14 @@
 #'                  each parameter needs to be a matrix
 #'                  named gamma, lambda, or psisq.
 #'
-#' @return a list of three objects:
+#' @return a list of three objects if no operational items are provided:
 #'         `all_iters` is a list of length `[n_iter]` for parameter estimates for all iterations,
 #'         `mean_mcmc` is a list of length 4 for mean of four parameters after burn-ins,
 #'         `sd_mcmc` is a list of length 4 for SD of four parameters after burn-ins.
+#'         three additional objects are included if operational items are provided:
+#'         `all_iters_test` includes all iterations for test items calibration,
+#'         `mean_mcmc_test` includes parameter estimates for test items calibration,
+#'         `sd_mcmc_test` includes parameter SD across iterations for test items calibration.
 #'
 #' @examples
 #' \dontrun{
@@ -42,8 +46,8 @@
 #' n_neg         <- 1
 #' n_block       <- 2
 #' n_dim         <- 4
-#' n_iter        <- 5000
-#' n_burnin      <- 200
+#' n_iter        <- 1000
+#' n_burnin      <- 20
 #' step_size_sd  <- 0.1
 #'
 #' # simulate parameters
@@ -58,7 +62,7 @@
 #' psisq  <- params$items$psisq
 #' theta  <- params$persons[, -1]
 #'
-# operational parameters
+#' # operational parameters
 #' op_gamma <- matrix(
 #'   # first pair 1-2 is fixed for each of 2 blocks
 #'   c(0.4, NA, NA,
@@ -87,12 +91,12 @@
 #'                                                           psisq = op_psisq)
 #' )
 #' end_mcmc   <- Sys.time()
-#' #'
+#'
 #' # correlate estimated and true parameters
 #' diag(cor(theta, output$mean_mcmc$theta))
-#' cor(gamma, output$mean_mcmc$gamma)
-#' cor(lambda, output$mean_mcmc$lambda)
-#' cor(psisq, output$mean_mcmc$psisq)
+#' cor(gamma, output$mean_mcmc_test$gamma)
+#' cor(lambda, output$mean_mcmc_test$lambda)
+#' cor(psisq, output$mean_mcmc_test$psisq)
 #' (time_mcmc <- end_mcmc - start_mcmc)
 #' }
 #'
@@ -107,7 +111,6 @@ estimate_thirt_params_mcmc <- function(resp,
                                        initial_params = list(),
                                        fixed_params   = list(),
                                        op_params = list()) {
-
   # set up new environment to store arguments
   mcmc_envir     <- new.env()
 
@@ -160,7 +163,7 @@ estimate_thirt_params_mcmc <- function(resp,
 
   #### WITHOUT FIELD-TEST ITEMS ####
 
-  if(length(test) == 0) {
+  if(length(op_params) == 0) {
 
     # initial log-likelihood
     assign(x     = "loglik",
@@ -201,14 +204,14 @@ estimate_thirt_params_mcmc <- function(resp,
 
     # remove burn-ins
     final_iters <- lapply(all_iters,
-                          FUN = function(x) x[-mcmc_envir$control$n_burnin]
+                          FUN = function(x) x[-c(1:mcmc_envir$control$n_burnin)]
     )
 
     # mean and sd of parameters after removing burn-ins
     mean_mcmc <- lapply(final_iters,
                         FUN = function(x) {
                           y = do.call(cbind, x)
-                          y = array(y, dim=c(dim(x[[1]]), length(x)))
+                          y = array(y, dim=c(dim(as.matrix(x[[1]])), length(x)))
                           apply(X = y,
                                 MARGIN = c(1, 2),
                                 FUN = function(x) mean(x, na.rm = T))
@@ -216,7 +219,7 @@ estimate_thirt_params_mcmc <- function(resp,
     sd_mcmc  <- lapply(final_iters,
                        FUN = function(x) {
                          y = do.call(cbind, x)
-                         y = array(y, dim=c(dim(x[[1]]), length(x)))
+                         y = array(y, dim=c(dim(as.matrix(x[[1]])), length(x)))
                          apply(X = y,
                                MARGIN = c(1, 2),
                                FUN = function(x) sd(x, na.rm = T))
@@ -307,13 +310,16 @@ estimate_thirt_params_mcmc <- function(resp,
     op_items$item <- op_items$new
     op_items$new <- NULL
 
+    # store original design in an object to restore to mcmc_envir after theta est
+    original_design <- mcmc_envir$design
+
     # update test design to exclude field test items
     op_n_item       <- as.data.frame(table(op_items$block))[ , 2]
-    op_block_size   <- choose2(n_item)
+    op_block_size   <- choose2(op_n_item)
     op_n_block      <- length(unique(op_items$block))
     op_n_person     <- length(unique(op_resp$person))
     op_n_dim        <- length(unique(op_items$dim))
-    assign(x     = "op_design",
+    assign(x     = "design",
            value = list(
              n_item     = op_n_item,
              block_size = op_block_size,
@@ -340,7 +346,7 @@ estimate_thirt_params_mcmc <- function(resp,
              x   = initialize_thirt_params(resp  = op_resp,
                                            items = op_items,
                                            initial_params = op_initial_params,
-                                           design = mcmc_envir$op_design),
+                                           design = mcmc_envir$design),
              val = list(resp  = op_resp,
                         items = op_items)
            ),
@@ -350,12 +356,12 @@ estimate_thirt_params_mcmc <- function(resp,
     assign(x     = "loglik",
            value = do.call(what = loglik_thirt_mcmc,
                            args = append(mcmc_envir$arguments,
-                                         list(design = mcmc_envir$op_design))),
+                                         list(design = mcmc_envir$design))),
            envir = mcmc_envir)
 
     # progress bar
     pb <- txtProgressBar(max   = mcmc_envir$control$n_iter,
-                         char  = "mcmc",
+                         char  = "score-",
                          style = 3)
 
     # all_iters list for all parameter estimates
@@ -385,14 +391,14 @@ estimate_thirt_params_mcmc <- function(resp,
 
     # remove burn-ins
     final_iters <- lapply(all_iters,
-                          FUN = function(x) x[-mcmc_envir$control$n_burnin]
+                          FUN = function(x) x[-c(1:mcmc_envir$control$n_burnin)]
     )
 
     # mean and sd of parameters after removing burn-ins
     mean_mcmc <- lapply(final_iters,
                         FUN = function(x) {
                           y = do.call(cbind, x)
-                          y = array(y, dim=c(dim(x[[1]]), length(x)))
+                          y = array(y, dim=c(dim(as.matrix(x[[1]])), length(x)))
                           apply(X = y,
                                 MARGIN = c(1, 2),
                                 FUN = function(x) mean(x, na.rm = T))
@@ -400,13 +406,17 @@ estimate_thirt_params_mcmc <- function(resp,
     sd_mcmc  <- lapply(final_iters,
                        FUN = function(x) {
                          y = do.call(cbind, x)
-                         y = array(y, dim=c(dim(x[[1]]), length(x)))
+                         y = array(y, dim=c(dim(as.matrix(x[[1]])), length(x)))
                          apply(X = y,
                                MARGIN = c(1, 2),
                                FUN = function(x) sd(x, na.rm = T))
                        }) # END sd_mcmc lapply
 
     # ESTIMATE FIELD TEST ITEMS FROM OPS ITEMS AND FIXED THETAS ----
+    # restore design to mcmc_envir
+    assign(x     = "design",
+           value = original_design,
+           envir = mcmc_envir)
     # store operational items parameters in mcmc_envir
     #   this should only be present for this second step, NOT first step
     #   because first step only includes operational items,
@@ -420,7 +430,8 @@ estimate_thirt_params_mcmc <- function(resp,
                                       val = list(
                                         theta  = mean_mcmc$theta))
     test_initial_params <- modifyList(x   = initial_params,
-                                      val = test_fixed_params)
+                                      val = list(
+                                        tehta = test_fixed_params))
 
     # initial parameters
     assign(x     = "arguments",
@@ -448,7 +459,7 @@ estimate_thirt_params_mcmc <- function(resp,
 
     # progress bar
     pb <- txtProgressBar(max   = mcmc_envir$control$n_iter,
-                         char  = "mcmc",
+                         char  = "items-",
                          style = 3)
 
     # all_iters list for all parameter estimates
@@ -462,7 +473,7 @@ estimate_thirt_params_mcmc <- function(resp,
 
       # update environment
       mcmc_envir <- estimate_thirt_params_mcmc_one(envir        = mcmc_envir,
-                                                   fixed_params = fixed_params)
+                                                   fixed_params = test_fixed_params)
 
       # stores parameters
       all_iters_test$gamma[[iter]]  <- mcmc_envir$arguments$gamma
@@ -478,14 +489,14 @@ estimate_thirt_params_mcmc <- function(resp,
 
     # remove burn-ins
     final_iters_test <- lapply(all_iters_test,
-                               FUN = function(x) x[-mcmc_envir$control$n_burnin]
+                               FUN = function(x) x[-c(1:mcmc_envir$control$n_burnin)]
     )
 
     # mean and sd of parameters after removing burn-ins
     mean_mcmc_test <- lapply(final_iters_test,
                         FUN = function(x) {
                           y = do.call(cbind, x)
-                          y = array(y, dim=c(dim(x[[1]]), length(x)))
+                          y = array(y, dim=c(dim(as.matrix(x[[1]])), length(x)))
                           apply(X = y,
                                 MARGIN = c(1, 2),
                                 FUN = function(x) mean(x, na.rm = T))
@@ -493,7 +504,7 @@ estimate_thirt_params_mcmc <- function(resp,
     sd_mcmc_test  <- lapply(final_iters_test,
                        FUN = function(x) {
                          y = do.call(cbind, x)
-                         y = array(y, dim=c(dim(x[[1]]), length(x)))
+                         y = array(y, dim=c(dim(as.matrix(x[[1]])), length(x)))
                          apply(X = y,
                                MARGIN = c(1, 2),
                                FUN = function(x) sd(x, na.rm = T))
