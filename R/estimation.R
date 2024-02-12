@@ -245,8 +245,8 @@ estimate_thirt_params_mcmc <- function(resp,
     #   using lambda indices -- should be the same for all item params
     op_items <- items[op_lambda_idx,]
     #   remove blocks with only one or fewer operational item
-    op_block_idx <- table(items$block) > 1
-    op_items <- op_items[op_items$block %in% which(op_block_idx),]
+    op_block_idx <- op_items$block[table(op_items$block) > 1]
+    op_items <- op_items[op_items$block %in% op_block_idx,]
     #   create new item indices
     op_items$new <- as.vector(
       unlist(sapply(unique(op_items$block), function(x) {
@@ -255,7 +255,7 @@ estimate_thirt_params_mcmc <- function(resp,
 
     # update resp dataframe to have only operational items
     #   remove blocks with only one or fewer operational item
-    op_resp <- resp[resp$block %in% which(op_block_idx),]
+    op_resp <- resp[resp$block %in% op_block_idx,]
     #   initialize vectors of op items indices
     #   to be used for each block
     op_idx <- op_lambda_idx
@@ -303,8 +303,14 @@ estimate_thirt_params_mcmc <- function(resp,
         #   match seq to update current_resp with new resp indicator
         match_indices <- match(current_resp$seq, resp_ref$seq)
         current_resp$resp <- resp_ref$resp[match_indices]
+
+        # remove the indices for this current block before moving on to next
+        op_idx <- op_idx[-seq(current_n_item)]
+
       } else {
         # skip blocks with one or fewer operational item
+        #   but first remove the indices for this current block
+        op_idx <- op_idx[-seq(current_n_item)]
         current_resp <- data.frame()
       }
 
@@ -345,6 +351,11 @@ estimate_thirt_params_mcmc <- function(resp,
                                       psisq  = op_psisq[!is.na(op_psisq)]))
     op_initial_params <- modifyList(x   = initial_params,
                                     val = op_fixed_params)
+
+
+    # update op_resp and op_items so that the block indicator starts with 1
+    op_resp$block  <- dense_rank(op_resp$block)
+    op_items$block <- dense_rank(op_items$block)
 
     # update envir arguments with initial params
     assign(x     = "arguments",
