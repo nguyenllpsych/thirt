@@ -111,6 +111,7 @@ estimate_thirt_params_mcmc <- function(resp,
                                        initial_params = list(),
                                        fixed_params   = list(),
                                        op_params = list()) {
+
   # set up new environment to store arguments
   mcmc_envir     <- new.env()
 
@@ -346,16 +347,11 @@ estimate_thirt_params_mcmc <- function(resp,
     # fix all item parameters (because all items are operational)
     op_fixed_params   <- modifyList(x = fixed_params,
                                     val = list(
-                                      gamma  = op_gamma[!is.na(op_gamma)],
-                                      lambda = op_lambda[!is.na(op_lambda)],
-                                      psisq  = op_psisq[!is.na(op_psisq)]))
+                                      gamma  = op_params$gamma[!is.na(op_params$gamma)],
+                                      lambda = op_params$lambda[!is.na(op_params$lambda)],
+                                      psisq  = op_params$psisq[!is.na(op_params$psisq)]))
     op_initial_params <- modifyList(x   = initial_params,
                                     val = op_fixed_params)
-
-
-    # update op_resp and op_items so that the block indicator starts with 1
-    op_resp$block  <- dense_rank(op_resp$block)
-    op_items$block <- dense_rank(op_items$block)
 
     # update envir arguments with initial params
     assign(x     = "arguments",
@@ -448,7 +444,7 @@ estimate_thirt_params_mcmc <- function(resp,
                                         theta  = mean_mcmc$theta))
     test_initial_params <- modifyList(x   = initial_params,
                                       val = list(
-                                        tehta = test_fixed_params))
+                                        theta = test_fixed_params))
 
     # initial parameters
     assign(x     = "arguments",
@@ -508,6 +504,7 @@ estimate_thirt_params_mcmc <- function(resp,
     final_iters_test <- lapply(all_iters_test,
                                FUN = function(x) x[-c(1:mcmc_envir$control$n_burnin)]
     )
+    final_iters_test <- final_iters_test[names(final_iters_test) != "theta"]
 
     # mean and sd of parameters after removing burn-ins
     mean_mcmc_test <- lapply(final_iters_test,
@@ -787,7 +784,7 @@ loglik_thirt_mcmc <- function(gamma,
     } # END for pair LOOP
   } # END for block LOOP
   gamma <- data.frame(pair  = pairs,
-                      block = rep(seq_len(design$n_block),
+                      block = rep(unique(items$block),
                                   times = design$block_size),
                       gamma = gamma)
 

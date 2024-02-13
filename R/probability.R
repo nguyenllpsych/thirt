@@ -584,6 +584,14 @@ p_thirtC <- function(gamma, items, persons, picked_order = NULL) {
 
   probability <- vector(mode = "list", length = n_block)
 
+  # for field test functionality
+  #   modify gamma, lambda, psisq so that block column would match rank
+  #   instead of true block
+  gamma$block  <- dense_rank(gamma$block)
+  lambda$block <- dense_rank(lambda$block)
+  psisq$block  <- dense_rank(psisq$block)
+  dict$block   <- dense_rank(dict$block)
+
   # probability matrix of dim [person X block_size]
 
   for(block in seq_len(n_block)) {
