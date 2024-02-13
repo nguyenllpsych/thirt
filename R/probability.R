@@ -587,10 +587,10 @@ p_thirtC <- function(gamma, items, persons, picked_order = NULL) {
   # for field test functionality
   #   modify gamma, lambda, psisq so that block column would match rank
   #   instead of true block
-  gamma$block  <- dense_rank(gamma$block)
-  lambda$block <- dense_rank(lambda$block)
-  psisq$block  <- dense_rank(psisq$block)
-  dict$block   <- dense_rank(dict$block)
+  gamma$block  <- as.integer(factor(rank(gamma$block)))
+  lambda$block <- as.integer(factor(rank(lambda$block)))
+  psisq$block  <- as.integer(factor(rank(psisq$block)))
+  dict$block   <- as.integer(factor(rank(dict$block)))
 
   # probability matrix of dim [person X block_size]
 
